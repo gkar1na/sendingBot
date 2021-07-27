@@ -1,4 +1,4 @@
 .idea/*
 .gitignore___jb_old___
 *.sqlite
-config.py
+/__pycache__/*
