@@ -3,7 +3,18 @@
 
 import vk_api
 import datetime
-import config, database, sending, change
+import config, sending, change
+from database import *
+
+@db_session
+def get_codes(chat_id: int) -> list:
+    return list(map(int, get(user.codes for user in User if user.chat_id == chat_id).split('\n')))
+
+
+@db_session
+def get_permission(chat_id: int) -> int:
+    return get(user.permission for user in User if user.chat_id == chat_id)
+
 
 vk_session = vk_api.VkApi(token=config.TOKEN)
 
@@ -21,9 +32,9 @@ for event in longpoll.listen():
 
         # Добавление нового чата в бд
         if event.from_user:
-            database.add_users({event.user_id})
+            add_users({event.user_id})
         elif event.from_chat:
-            database.add_users({event.chat_id})
+            add_users({event.chat_id})
 
         # Если ввели какую-то команду
         if event.text[0] in {'/', '!', '.'}:
@@ -105,15 +116,47 @@ for event in longpoll.listen():
                         message = -1
 
                     if message != -1:
-                        database.add_texts({
+                        add_texts({
                             key: [permission, message]
                         })
 
 
-        # Если ввели текстовое сообщение, то направить к личному КМу
+        # Если ввели текстовое сообщение, то перевести дальше или направить к личному КМу
         else:
-            sending.message(
-                vk=vk,
-                ID=event.user_id if event.from_user else event.chat_id,
-                message='Если у тебя есть вопрос, пиши своему КМу: ' + sending.KMLink(event.user_id)
-            )
+            codes = get_codes(event.user_id)
+            try:
+                code = int(event.text)
+                if code in codes:
+                    level = codes.index(code)
+                    permission = get_permission(event.user_id)
+                    if level + 1 == permission:
+                        permission += 1
+                        change.permission(
+                            user_id=event.user_id,
+                            permission=permission
+                        )
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id,
+                            message=f'Поздравляю! Ты успешно прошёл {permission-1} этап'
+                        )
+
+                    else:
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id,
+                            message='Что-то неправильно. Если у тебя есть вопрос, пиши своему КМу: ' + sending.KMLink(event.user_id)
+                        )
+
+                else:
+                    sending.message(
+                        vk=vk,
+                        ID=event.user_id,
+                        message='Что-то неправильно. Если у тебя есть вопрос, пиши своему КМу: ' + sending.KMLink(event.user_id)
+                    )
+            except:
+                sending.message(
+                    vk=vk,
+                    ID=event.user_id,
+                    message='Если у тебя есть вопрос, пиши своему КМу: ' + sending.KMLink(event.user_id)
+                )
