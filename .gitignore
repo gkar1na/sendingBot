@@ -2,3 +2,4 @@
 .gitignore___jb_old___
 *.sqlite
 /__pycache__/*
+database.x*
