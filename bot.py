@@ -3,7 +3,7 @@
 
 import vk_api
 import datetime
-import config, database, sending
+import config, database, sending, change
 
 vk_session = vk_api.VkApi(token=config.TOKEN)
 
@@ -29,8 +29,9 @@ for event in longpoll.listen():
         if event.text[0] in {'/', '!', '.'}:
 
             # Разделение текста сообщения на команду и ее аргументы
-            text = sending.morphological_analysis(event.text)
+            text = list(map(str, event.text.split()))
             command = text[0][1:]
+
             try:
                 args = text[1:]
             except IndexError:
@@ -46,7 +47,8 @@ for event in longpoll.listen():
                 )
 
                 # Обработчик команд
-                if config.commands[command] == 1:  # РАССЫЛКА key permission
+                if config.commands[command] == 1:  # РАССЫЛКА key(название рассылки) permission(кому отправить)
+
                     try:
                         key = args[0]
                     except:
@@ -57,12 +59,56 @@ for event in longpoll.listen():
                     except:
                         permission = -1
 
-
                     sending.default_sending(
                         vk=vk,
                         key=key,
-                        permission=int(args[0])
+                        permission=permission
                     )
+
+                elif config.commands[command] == 2:  # ИЗМЕНИТЬ_ТЕКСТ key(название рассылки) permission(кому можно его отправлять) message(текст сообщения)
+                    try:
+                        key = args[0]
+                    except:
+                        key = 0
+
+                    try:
+                        permission = int(args[1])
+                    except:
+                        permission = -1
+
+                    try:
+                        message = ' '.join(args[2:])
+                    except:
+                        message = -1
+
+                    change.text(
+                        admin=event.user_id,
+                        key=key,
+                        message=message,
+                        permission=permission
+                    )
+
+                elif config.commands[command] == 3:  # ДОБАВИТЬ_ТЕКСТ key(название рассылки) permission(кому можно его отправлять) message(текст сообщения)
+                    try:
+                        key = args[0]
+                    except:
+                        key = 0
+
+                    try:
+                        permission = int(args[1])
+                    except:
+                        permission = -1
+
+                    try:
+                        message = ' '.join(args[2:])
+                    except:
+                        message = -1
+
+                    if message != -1:
+                        database.add_texts({
+                            key: [permission, message]
+                        })
+
 
         # Если ввели текстовое сообщение, то направить к личному КМу
         else:
