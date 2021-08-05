@@ -3,7 +3,7 @@
 
 import vk_api
 import datetime
-import config, sending, change
+import config, sending, change, check
 from database import *
 
 @db_session
@@ -14,6 +14,11 @@ def get_codes(chat_id: int) -> list:
 @db_session
 def get_permission(chat_id: int) -> int:
     return get(user.permission for user in User if user.chat_id == chat_id)
+
+
+@db_session
+def get_keys() -> set:
+    return set(select(text.key for text in Text))
 
 
 vk_session = vk_api.VkApi(token=config.TOKEN)
@@ -37,7 +42,7 @@ for event in longpoll.listen():
             add_users({event.chat_id})
 
         # Если ввели какую-то команду
-        if event.text[0] in {'/', '!', '.'}:
+        if check.permission(config.orginizers, event.user_id) and event.text[0] in {'/', '!', '.'}:
 
             # Разделение текста сообщения на команду и ее аргументы
             text = list(map(str, event.text.split()))
@@ -54,11 +59,12 @@ for event in longpoll.listen():
                     vk=vk,
                     ID=event.user_id if event.from_user else event.chat_id,
                     message=f'Вызвана команда {command} с аргументами {args} в '
-                    f'{datetime.datetime.now().strftime("%H:%M")}'
+                    f'{datetime.now().strftime("%H:%M")}'
                 )
 
                 # Обработчик команд
-                if config.commands[command] == 1:  # РАССЫЛКА key(название рассылки) permission(кому отправить)
+                # РАССЫЛКА key(название рассылки) permission(кому отправить)
+                if check.permission(config.orginizers, event.user_id) and config.commands[command] == 1:
 
                     try:
                         key = args[0]
@@ -70,13 +76,21 @@ for event in longpoll.listen():
                     except:
                         permission = -1
 
-                    sending.default_sending(
-                        vk=vk,
-                        key=key,
-                        permission=permission
-                    )
+                    if key in get_keys():
+                        sending.default_sending(
+                            vk=vk,
+                            key=key,
+                            permission=permission
+                        )
+                    else:
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id,
+                            message=f'Нет такой рассылки, как "{key}"'
+                        )
 
-                elif config.commands[command] == 2:  # ИЗМЕНИТЬ_ТЕКСТ key(название рассылки) permission(кому можно его отправлять) message(текст сообщения)
+                # ИЗМЕНИТЬ_ТЕКСТ key(название рассылки) permission(кому можно его отправлять) message(текст сообщения)
+                elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 2:
                     try:
                         key = args[0]
                     except:
@@ -99,7 +113,8 @@ for event in longpoll.listen():
                         permission=permission
                     )
 
-                elif config.commands[command] == 3:  # ДОБАВИТЬ_ТЕКСТ key(название рассылки) permission(кому можно его отправлять) message(текст сообщения)
+                # ДОБАВИТЬ_ТЕКСТ key(название рассылки) permission(кому можно его отправлять) message(текст сообщения)
+                elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 3:
                     try:
                         key = args[0]
                     except:
@@ -119,6 +134,14 @@ for event in longpoll.listen():
                         add_texts({
                             key: [permission, message]
                         })
+
+                else:
+                    sending.message(
+                        vk=vk,
+                        ID=event.user_id if event.from_user else event.chat_id,
+                        message=f'Вызвана несуществующая команда {command} (или недостаточно прав) с аргументами'
+                        f'{args} в {datetime.datetime.now().strftime("%H:%M")}'
+                    )
 
 
         # Если ввели текстовое сообщение, то перевести дальше или направить к личному КМу

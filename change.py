@@ -3,6 +3,7 @@
 
 from database import *
 from datetime import datetime
+import check
 
 @db_session
 def permission(user_id: int, permission: int, admin=0) -> str:
@@ -10,15 +11,18 @@ def permission(user_id: int, permission: int, admin=0) -> str:
     Принимает айди нужного пользователя и уровень, который ему присвоить.
     Если запрос от другого пользователя, то принимает его айди.
     Возвращает информативное сообщение о результаты выполнения запроса."""
-    existing_users_id = set(select(user.chat_id for user in User))
+    if check.permission(0, user_id):
+        existing_users_id = set(select(user.chat_id for user in User))
 
-    if user_id in existing_users_id:
-        key = get(user.id for user in User if user_id == user.chat_id)
-        User[key].permission = permission
-        User[key].date = datetime.now().strftime(date_format)
-        process = f'have changed permission in User[{key}]'
+        if user_id in existing_users_id:
+            key = get(user.id for user in User if user_id == user.chat_id)
+            User[key].permission = permission
+            User[key].date = datetime.now().strftime(date_format)
+            process = f'have changed permission in User[{key}]'
+        else:
+            process = 'person is not found'
     else:
-        process = 'person is not found'
+        process = 'no needed permission'
 
     return process
 

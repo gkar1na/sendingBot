@@ -3,6 +3,7 @@
 
 TOKEN = 'TOKEN'
 admins = set()
+orginizers = {0}
 
 commands = {
     'РАССЫЛКА': 1,
