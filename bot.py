@@ -76,17 +76,23 @@ for event in longpoll.listen():
                     except:
                         permission = -1
 
-                    if key in get_keys():
+                    if key in get_keys() and permission != -1:
                         sending.default_sending(
                             vk=vk,
                             key=key,
                             permission=permission
                         )
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id,
+                            message=f'Рассылка отправлена'
+                        )
+
                     else:
                         sending.message(
                             vk=vk,
                             ID=event.user_id,
-                            message=f'Нет такой рассылки, как "{key}"'
+                            message=f'Неверно введена команда'
                         )
 
                 # ИЗМЕНИТЬ_ТЕКСТ key(название рассылки) permission(кому можно его отправлять) message(текст сообщения)
@@ -104,14 +110,29 @@ for event in longpoll.listen():
                     try:
                         message = ' '.join(args[2:])
                     except:
-                        message = -1
+                        message = ''
 
-                    change.text(
-                        admin=event.user_id,
-                        key=key,
-                        message=message,
-                        permission=permission
-                    )
+                    if key and permission != -1 and message:
+
+                        result = change.text(
+                            admin=event.user_id,
+                            key=key,
+                            message=message,
+                            permission=permission
+                        )
+
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id,
+                            message=result
+                        )
+
+                    else:
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id,
+                            message=f'Неверно введена команда'
+                        )
 
                 # ДОБАВИТЬ_ТЕКСТ key(название рассылки) permission(кому можно его отправлять) message(текст сообщения)
                 elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 3:
@@ -128,20 +149,71 @@ for event in longpoll.listen():
                     try:
                         message = ' '.join(args[2:])
                     except:
-                        message = -1
+                        message = ''
 
-                    if message != -1:
+                    if key and permission != -1 and message:
                         add_texts({
                             key: [permission, message]
                         })
+
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id,
+                            message=f'Добавлен новый текст рассылки "{key}"'
+                        )
+
+                    else:
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id,
+                            message=f'Неверно введена команда'
+                        )
+
+                # НАЗНАЧИТЬ_КМ km_link(айди КМа) first_name(имя гостя) last_name(фамилия гостя)
+                elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 4:
+                    try:
+                        km_link = args[0]
+                    except:
+                        km_link = ''
+
+                    try:
+                        first_name = args[1]
+                    except:
+                        first_name = ''
+
+                    try:
+                        last_name = args[2]
+                    except:
+                        last_name = ''
+
+                    if km_link and first_name and last_name:
+                        result = change.KMLink(
+                            km_limk=km_link,
+                            first_name=first_name,
+                            last_name=last_name
+                        )
+
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id,
+                            message=result
+                        )
+
+                    else:
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id,
+                            message=f'Неверно введена команда'
+                        )
 
                 else:
                     sending.message(
                         vk=vk,
                         ID=event.user_id if event.from_user else event.chat_id,
                         message=f'Вызвана несуществующая команда {command} (или недостаточно прав) с аргументами'
-                        f'{args} в {datetime.datetime.now().strftime("%H:%M")}'
+                        f'{args} в {datetime.now().strftime("%H:%M")}'
                     )
+
 
 
         # Если ввели текстовое сообщение, то перевести дальше или направить к личному КМу
@@ -168,18 +240,21 @@ for event in longpoll.listen():
                         sending.message(
                             vk=vk,
                             ID=event.user_id,
-                            message='Что-то неправильно. Если у тебя есть вопрос, пиши своему КМу: ' + sending.KMLink(event.user_id)
+                            message='Что-то неправильно. Если у тебя есть вопрос, пиши своему КМу: ' +
+                                    sending.KMLink(event.user_id)
                         )
 
                 else:
                     sending.message(
                         vk=vk,
                         ID=event.user_id,
-                        message='Что-то неправильно. Если у тебя есть вопрос, пиши своему КМу: ' + sending.KMLink(event.user_id)
+                        message='Что-то неправильно. Если у тебя есть вопрос, пиши своему КМу: ' +
+                                sending.KMLink(event.user_id)
                     )
             except:
                 sending.message(
                     vk=vk,
                     ID=event.user_id,
-                    message='Если у тебя есть вопрос, пиши своему КМу: ' + sending.KMLink(event.user_id)
+                    message='Если у тебя есть вопрос, пиши своему КМу: ' +
+                            sending.KMLink(event.user_id)
                 )

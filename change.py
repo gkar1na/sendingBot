@@ -43,3 +43,17 @@ def text(admin: int, key: str, message: str, permission: int) -> str:
 
     return process
 
+@db_session
+def KMLink(km_limk: str, first_name: str, last_name: str) -> str:
+    exiting_first_names = set(select(user.first_name for user in User))
+    exiting_last_names = set(select(user.last_name for user in User))
+
+    if first_name in exiting_first_names and last_name in exiting_last_names:
+        ID = get(user.id for user in User if user.first_name == first_name and user.last_name == last_name)
+        User[ID].KMLink = km_limk
+        User[ID].date = datetime.now().strftime(date_format)
+        process = f'have changed User[{ID}]'
+    else:
+        process = 'user is not found'
+
+    return process
