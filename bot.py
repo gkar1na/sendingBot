@@ -206,6 +206,44 @@ for event in longpoll.listen():
                             message=f'Неверно введена команда'
                         )
 
+                # ИЗМЕНИТЬ_ПРАВА first_name(имя гостя) last_name(фамилия гостя) permission(новый уровень)
+                elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 5:
+                    try:
+                        first_name = args[0]
+                    except:
+                        first_name = ''
+
+                    try:
+                        last_name = args[1]
+                    except:
+                        last_name = ''
+
+                    try:
+                        permission = int(args[2])
+                    except:
+                        permission = -1
+
+                    if first_name and last_name and permission != -1:
+                        result = change.permission(
+                            first_name=first_name,
+                            last_name=last_name,
+                            permission=permission,
+                            admin=event.user_id
+                        )
+
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id,
+                            message=result
+                        )
+
+                    else:
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id,
+                            message=f'Неверно введена команда'
+                        )
+
                 else:
                     sending.message(
                         vk=vk,
@@ -226,8 +264,11 @@ for event in longpoll.listen():
                     permission = get_permission(event.user_id)
                     if level + 1 == permission:
                         permission += 1
+                        user_info = vk.users.get(user_id=event.user_id)
+                        user_info = user_info[0]
                         change.permission(
-                            user_id=event.user_id,
+                            first_name=user_info['first_name'],
+                            last_name=user_info['last_name'],
                             permission=permission
                         )
                         sending.message(
