@@ -7,6 +7,7 @@ from datetime import datetime
 import config
 import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
+from random import randint
 
 date_format = '%d.%m.%y %H:%M:%S'
 
@@ -18,6 +19,7 @@ class User(db.Entity):
     last_name = Required(str)
     chat_id = Required(int)
     permission = Required(int)
+    codes = Required(str)
     KMLink = Required(str)
     date = Required(str)
 
@@ -59,6 +61,7 @@ def add_users(users: set) -> None:
                 last_name=user_info['last_name'],
                 chat_id=user,
                 permission=admin,
+                codes='\n'.join([str(randint(10000000, 100000000)) for i in range(len(config.permissions.keys()))]),
                 KMLink='vk.com/' + config.headLogin,
                 date=datetime.now().strftime(date_format)
             )

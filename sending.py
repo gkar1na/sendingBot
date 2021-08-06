@@ -7,23 +7,16 @@ from vk_api.utils import get_random_id
 
 
 @db_session
-def default_sending(vk: vk_api.vk_api.VkApiMethod, key='', permission=-1) -> None:
+def default_sending(vk: vk_api.vk_api.VkApiMethod, key: str, permission=-1) -> None:
     """Дефолт рассылка.
     Принимает уровень, которому рассылать"""
     users = set(select(user.chat_id for user in User if permission == -1 or user.permission == permission))
     for user in users:
-        if user > 100000000:
-            vk.messages.send(
-                user_id=user,
-                message=f'Сообщение "{permission}" пользователям',
-                random_id=get_random_id()
-            )
-        else:
-            vk.messages.send(
-                chat_id=user,
-                message=f'Сообщение "{permission}" пользователям',
-                random_id=get_random_id()
-            )
+        vk.messages.send(
+            user_id=user,
+            message=get(text.message for text in Text if text.key == key),
+            random_id=get_random_id()
+        )
 
 
 @db_session
