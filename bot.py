@@ -7,8 +7,6 @@ import config, sending, change, check
 from database import *
 
 
-
-
 vk_session = vk_api.VkApi(token=config.TOKEN)
 
 from vk_api.longpoll import VkLongPoll, VkEventType
@@ -16,6 +14,14 @@ from vk_api.longpoll import VkLongPoll, VkEventType
 longpoll = VkLongPoll(vk_session)
 
 vk = vk_session.get_api()
+
+# Оповещение необработанным диалогам
+for dialog in vk.messages.getDialogs(unanswered=1)['items']:
+    sending.message(
+        vk=vk,
+        ID=dialog['message']['user_id'],
+        message=config.unread_text
+    )
 
 # Запуск прослушки
 for event in longpoll.listen():
@@ -57,7 +63,7 @@ for event in longpoll.listen():
                 sending.message(
                     vk=vk,
                     ID=event.user_id if event.from_user else event.chat_id,
-                    message=f'Вызвана команда {command} с аргументами {args} в '
+                    message=f'Вызвана команда "{command}" с аргументами {args} в '
                     f'{datetime.now().strftime("%H:%M")}'
                 )
 
@@ -247,11 +253,16 @@ for event in longpoll.listen():
                     sending.message(
                         vk=vk,
                         ID=event.user_id if event.from_user else event.chat_id,
-                        message=f'Вызвана несуществующая команда {command} (или недостаточно прав) с аргументами'
+                        message=f'Вызвана несуществующая команда "{command}" (или недостаточно прав) с аргументами'
                         f'{args} в {datetime.now().strftime("%H:%M")}'
                     )
 
-
+            else:
+                sending.message(
+                    vk=vk,
+                    ID=event.user_id,
+                    message=f'Не сущесвует команды "{command}" с аргументами {args}'
+                )
 
         # Если ввели текстовое сообщение, то перевести дальше или направить к личному КМу
         else:
