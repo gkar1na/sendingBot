@@ -186,7 +186,7 @@ for event in longpoll.listen():
                         last_name = ''
 
                     if km_link and first_name and last_name:
-                        result = change.KMLink(
+                        result = change.km_domain(
                             km_limk=km_link,
                             first_name=first_name,
                             last_name=last_name
@@ -273,7 +273,8 @@ for event in longpoll.listen():
                         sending.message(
                             vk=vk,
                             ID=event.user_id,
-                            message=f'Поздравляю! Ты успешно прошёл {permission-1} этап'
+                            message=f'Поздравляю! Ты успешно прошёл {permission-1} этап.\n' +
+                                    get_text(str(permission-1))
                         )
 
 
@@ -281,21 +282,21 @@ for event in longpoll.listen():
                         sending.message(
                             vk=vk,
                             ID=event.user_id,
-                            message='Что-то неправильно. Если у тебя есть вопрос, пиши своему КМу: ' +
-                                    sending.KMLink(event.user_id)
+                            message='Что-то неправильно. ' + config.problem_message +
+                                    'vk.com/' + get_km_domain(event.user_id)
                         )
 
                 else:
                     sending.message(
                         vk=vk,
                         ID=event.user_id,
-                        message='Что-то неправильно. Если у тебя есть вопрос, пиши своему КМу: ' +
-                                sending.KMLink(event.user_id)
+                        message='Что-то неправильно. ' + config.problem_message +
+                                    'vk.com/' + get_km_domain(event.user_id)
                     )
             except:
                 sending.message(
                     vk=vk,
                     ID=event.user_id,
-                    message='Если у тебя есть вопрос, пиши своему КМу: ' +
-                            sending.KMLink(event.user_id)
+                    message=config.problem_message +
+                            'vk.com/' + get_km_domain(event.user_id)
                 )

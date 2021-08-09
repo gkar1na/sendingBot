@@ -17,10 +17,11 @@ db = Database()
 class User(db.Entity):
     first_name = Required(str)
     last_name = Required(str)
+    domain = Required(str)
     chat_id = Required(int)
     permission = Required(int)
     codes = Required(str)
-    KMLink = Required(str)
+    km_domain = Required(str)
     date = Required(str)
 
 
@@ -54,15 +55,16 @@ def add_users(users: set) -> None:
     for user in users | config.admins:
         if user not in old_users:
             admin = int(not (user in config.admins | old_admins))
-            user_info = vk.users.get(user_id=user)
+            user_info = vk.users.get(user_id=user, fields='domain')
             user_info = user_info[0]
             User(
                 first_name=user_info['first_name'],
                 last_name=user_info['last_name'],
+                domain=user_info['domain'],
                 chat_id=user,
                 permission=admin,
                 codes='\n'.join([str(randint(10000000, 100000000)) for i in range(len(config.permissions.keys()))]),
-                KMLink='vk.com/' + config.headLogin,
+                km_domain=config.headLogin,
                 date=datetime.now().strftime(date_format)
             )
             old_users.add(user)
@@ -120,7 +122,15 @@ def get_users() -> set:
 
 @db_session
 def get_text(key: str) -> str:
+    if key.isdigit():
+        key = get(text.key for text in Text if text.permission == key)
     return get(text.message for text in Text if text.key == key)
+
+
+@db_session
+def get_km_domain(ID: int) -> str:
+    return get(user.km_domain for user in User if user.chat_id == ID)
+
 
 add_users(config.admins)
 add_texts(config.texts)

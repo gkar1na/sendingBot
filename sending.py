@@ -20,10 +20,6 @@ def default_sending(vk: vk_api.vk_api.VkApiMethod, key: str, permission=-1) -> N
         )
 
 
-@db_session
-def KMLink(ID: int) -> str:
-    return get(user.KMLink for user in User if user.chat_id == ID)
-
 
 def morphological_analysis(text: str) -> list:
     """Take a string and
