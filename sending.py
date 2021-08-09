@@ -10,11 +10,12 @@ from vk_api.utils import get_random_id
 def default_sending(vk: vk_api.vk_api.VkApiMethod, key: str, permission=-1) -> None:
     """Дефолт рассылка.
     Принимает уровень, которому рассылать"""
-    users = set(select(user.chat_id for user in User if permission == -1 or user.permission == permission))
+    users = set(select(user.chat_id for user in User if user.chat_id != 0 and
+                       (permission == -1 or user.permission == permission)))
     for user in users:
         vk.messages.send(
             user_id=user,
-            message=get(text.message for text in Text if text.key == key),
+            message=get_text(key),
             random_id=get_random_id()
         )
 

@@ -6,19 +6,7 @@ import datetime
 import config, sending, change, check
 from database import *
 
-@db_session
-def get_codes(chat_id: int) -> list:
-    return list(map(int, get(user.codes for user in User if user.chat_id == chat_id).split('\n')))
 
-
-@db_session
-def get_permission(chat_id: int) -> int:
-    return get(user.permission for user in User if user.chat_id == chat_id)
-
-
-@db_session
-def get_keys() -> set:
-    return set(select(text.key for text in Text))
 
 
 vk_session = vk_api.VkApi(token=config.TOKEN)
@@ -36,10 +24,21 @@ for event in longpoll.listen():
     if event.type == VkEventType.MESSAGE_NEW and event.to_me:
 
         # Добавление нового чата в бд
-        if event.from_user:
-            add_users({event.user_id})
-        elif event.from_chat:
-            add_users({event.chat_id})
+        if event.user_id not in get_users():
+            if event.text != config.start_text:
+                sending.message(
+                    vk=vk,
+                    ID=event.user_id if event.from_user else event.chat_id,
+                    message=f'Не выполнены какие-то условия'
+                )
+                continue
+            elif event.user_id not in get_users():
+                add_users({event.user_id})
+                sending.message(
+                    vk=vk,
+                    ID=event.user_id if event.from_user else event.chat_id,
+                    message=get_text('ПРИВЕТСТВИЕ')
+                )
 
         # Если ввели какую-то команду
         if check.permission(config.orginizers, event.user_id) and event.text[0] in {'/', '!', '.'}:
@@ -266,7 +265,7 @@ for event in longpoll.listen():
                         permission += 1
                         user_info = vk.users.get(user_id=event.user_id)
                         user_info = user_info[0]
-                        change.permission(
+                        result = change.permission(
                             first_name=user_info['first_name'],
                             last_name=user_info['last_name'],
                             permission=permission
@@ -276,6 +275,7 @@ for event in longpoll.listen():
                             ID=event.user_id,
                             message=f'Поздравляю! Ты успешно прошёл {permission-1} этап'
                         )
+
 
                     else:
                         sending.message(

@@ -98,6 +98,30 @@ def add_permissions(permissions: dict) -> None:
             old_names.add(name)
 
 
+@db_session
+def get_codes(chat_id: int) -> list:
+    return list(map(int, get(user.codes for user in User if user.chat_id == chat_id).split('\n')))
+
+
+@db_session
+def get_permission(chat_id: int) -> int:
+    return get(user.permission for user in User if user.chat_id == chat_id)
+
+
+@db_session
+def get_keys() -> set:
+    return set(select(text.key for text in Text))
+
+
+@db_session
+def get_users() -> set:
+    return set(select(user.chat_id for user in User if user.chat_id != 0))
+
+
+@db_session
+def get_text(key: str) -> str:
+    return get(text.message for text in Text if text.key == key)
+
 add_users(config.admins)
 add_texts(config.texts)
 add_permissions(config.permissions)
