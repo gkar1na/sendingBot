@@ -63,7 +63,7 @@ def add_users(users: set) -> None:
                 domain=user_info['domain'],
                 chat_id=user,
                 permission=admin,
-                codes='\n'.join([str(randint(10000000, 100000000)) for i in range(len(config.permissions.keys()))]),
+                codes='\n'.join([str(randint(10000000, 100000000)) for i in range(len(config.texts.keys()))]),
                 km_domain=config.headLogin,
                 date=datetime.now().strftime(date_format)
             )
