@@ -6,7 +6,6 @@ import datetime
 import config, sending, change, check
 from database import *
 
-
 vk_session = vk_api.VkApi(token=config.TOKEN)
 
 from vk_api.longpoll import VkLongPoll, VkEventType
@@ -45,6 +44,15 @@ for event in longpoll.listen():
                     ID=event.user_id if event.from_user else event.chat_id,
                     message=get_text('ПРИВЕТСТВИЕ')
                 )
+
+        # Если нет текста
+        if not event.text:
+            sending.message(
+                vk=vk,
+                ID=event.user_id if event.from_user else event.chat_id,
+                message=f'Не выполнены какие-то условия'
+            )
+            continue
 
         # Если ввели какую-то команду
         if check.permission(config.orginizers, event.user_id) and event.text[0] in {'/', '!', '.'}:
@@ -92,7 +100,13 @@ for event in longpoll.listen():
                             ID=event.user_id,
                             message=f'Рассылка отправлена'
                         )
-
+                    elif not key:
+                        sending.unique_sending(vk)
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id,
+                            message=f'Рассылка отправлена'
+                        )
                     else:
                         sending.message(
                             vk=vk,
@@ -284,8 +298,8 @@ for event in longpoll.listen():
                         sending.message(
                             vk=vk,
                             ID=event.user_id,
-                            message=f'Поздравляю! Ты успешно прошёл {permission-1} этап.\n' +
-                                    get_text(str(permission-1))
+                            message=f'Поздравляю! Ты успешно прошёл {permission - 1} этап.\n' +
+                                    get_text(str(permission - 1))
                         )
 
 
@@ -302,7 +316,7 @@ for event in longpoll.listen():
                         vk=vk,
                         ID=event.user_id,
                         message='Что-то неправильно. ' + config.problem_message +
-                                    'vk.com/' + get_km_domain(event.user_id)
+                                'vk.com/' + get_km_domain(event.user_id)
                     )
             except:
                 sending.message(

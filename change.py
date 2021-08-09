@@ -5,6 +5,7 @@ from database import *
 from datetime import datetime
 import check
 
+
 @db_session
 def permission(first_name: str, last_name: str, permission: int, admin=0) -> str:
     """Меняет уровень доступа пользователя.
@@ -46,6 +47,7 @@ def text(admin: int, key: str, message: str, permission: int) -> str:
         process = 'no needed permission'
 
     return process
+
 
 @db_session
 def km_domain(km_limk: str, first_name: str, last_name: str) -> str:

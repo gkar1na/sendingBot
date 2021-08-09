@@ -20,6 +20,20 @@ def default_sending(vk: vk_api.vk_api.VkApiMethod, key: str, permission=-1) -> N
         )
 
 
+@db_session
+def unique_sending(vk: vk_api.vk_api.VkApiMethod) -> None:
+    users = set(select((user.chat_id, user.permission) for user in User if user.chat_id != 0 and user.permission))
+
+    for user in users:
+        message = get(text.message for text in Text if text.permission == user[1] - 1) or \
+                  get(text.message for text in Text if text.permission == -1)
+
+        vk.messages.send(
+            user_id=user[0],
+            message=message,
+            random_id=get_random_id()
+        )
+
 
 def morphological_analysis(text: str) -> list:
     """Take a string and

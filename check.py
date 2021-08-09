@@ -3,6 +3,7 @@
 
 from database import *
 
+
 @db_session
 def permission(needed_permissions: set, user_id: int) -> bool:
     permission = get(user.permission for user in User if user_id == user.chat_id)
