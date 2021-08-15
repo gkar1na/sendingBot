@@ -14,6 +14,8 @@ longpoll = VkLongPoll(vk_session)
 
 vk = vk_session.get_api()
 
+from vk_api.keyboard import VkKeyboard, VkKeyboardColor, VkKeyboardButton
+
 # Оповещение необработанным диалогам
 for dialog in vk.messages.getDialogs(unanswered=1)['items']:
     sending.message(
@@ -30,14 +32,7 @@ for event in longpoll.listen():
 
         # Добавление нового чата в бд
         if event.user_id not in get_users():
-            if event.text != config.start_text:
-                sending.message(
-                    vk=vk,
-                    ID=event.user_id if event.from_user else event.chat_id,
-                    message=f'Не выполнены какие-то условия'
-                )
-                continue
-            elif event.user_id not in get_users():
+            if event.user_id not in get_users():
                 add_users({event.user_id})
                 sending.message(
                     vk=vk,
@@ -278,6 +273,22 @@ for event in longpoll.listen():
                     message=f'Не сущесвует команды "{command}" с аргументами {args}'
                 )
 
+        elif event.text == 'Сообщить об ошибке':
+            km_domain, km_chat_id, name, surname, domain = get_user_info(event.user_id)
+
+            message = f'У {name} {surname} (vk.com/{domain}) возникла проблема'
+            sending.message(
+                vk=vk,
+                ID=km_chat_id,
+                message=message
+            )
+
+            sending.message(
+                vk=vk,
+                ID=event.user_id,
+                message='Ждите ответа'
+            )
+
         # Если ввели текстовое сообщение, то перевести дальше или направить к личному КМу
         else:
             codes = get_codes(event.user_id)
@@ -304,24 +315,25 @@ for event in longpoll.listen():
 
 
                     else:
-                        sending.message(
+                        sending.error_message(
                             vk=vk,
                             ID=event.user_id,
-                            message='Что-то неправильно. ' + config.problem_message +
-                                    'vk.com/' + get_km_domain(event.user_id)
+                            message=config.problem_message +
+                                    'vk.com/' + get_km_domain(event.user_id) + '\nТвой айди: ' + str(event.user_id)
                         )
 
                 else:
-                    sending.message(
+                    sending.error_message(
                         vk=vk,
                         ID=event.user_id,
-                        message='Что-то неправильно. ' + config.problem_message +
-                                'vk.com/' + get_km_domain(event.user_id)
+                        message=config.problem_message +
+                                'vk.com/' + get_km_domain(event.user_id) + '\nТвой айди: ' + str(event.user_id)
                     )
             except:
-                sending.message(
+
+                sending.error_message(
                     vk=vk,
                     ID=event.user_id,
                     message=config.problem_message +
-                            'vk.com/' + get_km_domain(event.user_id)
+                            'vk.com/' + get_km_domain(event.user_id) + '\nТвой айди: ' + str(event.user_id)
                 )

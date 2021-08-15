@@ -4,7 +4,7 @@
 from database import *
 import vk_api
 from vk_api.utils import get_random_id
-
+from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 @db_session
 def default_sending(vk: vk_api.vk_api.VkApiMethod, key: str, permission=-1) -> None:
@@ -52,12 +52,13 @@ def morphological_analysis(text: str) -> list:
     return text
 
 
-def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str) -> None:
+def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None) -> None:
     if ID >= 100000000:
         vk.messages.send(
             user_id=ID,
             message=message,
-            random_id=get_random_id()
+            random_id=get_random_id(),
+            keyboard=None if not keyboard else keyboard.get_keyboard()
         )
     else:
         vk.messages.send(
@@ -65,3 +66,14 @@ def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str) -> None:
             message=message,
             random_id=get_random_id()
         )
+
+def error_message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str) -> None:
+    keyboard = VkKeyboard(inline=True)
+    keyboard.add_button('Сообщить об ошибке', color=VkKeyboardColor.NEGATIVE)
+
+    vk.messages.send(
+        user_id=ID,
+        message=message + '\n' + get_text('ОШИБКА'),
+        random_id=get_random_id(),
+        keyboard=keyboard.get_keyboard()
+    )

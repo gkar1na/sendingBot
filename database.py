@@ -132,6 +132,19 @@ def get_km_domain(ID: int) -> str:
     return get(user.km_domain for user in User if user.chat_id == ID)
 
 
+@db_session
+def get_user_info(ID: int) -> tuple:
+    km_domain = get_km_domain(ID)
+    km_chat_id = get(user.chat_id for user in User if user.domain == km_domain)
+    name = get(user.first_name for user in User if user.chat_id == ID)
+    surname = get(user.last_name for user in User if user.chat_id == ID)
+    domain = get(user.domain for user in User if user.chat_id == ID)
+
+    return km_domain, km_chat_id, name, surname, domain
+
+
+
+
 add_users(config.admins)
 add_texts(config.texts)
 add_permissions(config.permissions)
