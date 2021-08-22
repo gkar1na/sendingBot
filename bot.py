@@ -1,339 +1,541 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import vk_api
-import datetime
-import config, sending, change, check
+import sending, change, check, config
 from database import *
+from vk_api.longpoll import VkLongPoll, VkEventType
+import vk_api
+import logging
 
+
+# Подключение логов
+logging.basicConfig(
+    filename='bot.log',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+db_logger = logging.getLogger('pony.orm')
+db_logger.setLevel(logging.WARNING)
+
+# Подключение к сообществу
 vk_session = vk_api.VkApi(token=config.TOKEN)
 
-from vk_api.longpoll import VkLongPoll, VkEventType
-
 longpoll = VkLongPoll(vk_session)
-
 vk = vk_session.get_api()
-
-from vk_api.keyboard import VkKeyboard, VkKeyboardColor, VkKeyboardButton
 
 # Оповещение необработанным диалогам
 for dialog in vk.messages.getDialogs(unanswered=1)['items']:
-    sending.message(
-        vk=vk,
-        ID=dialog['message']['user_id'],
-        message=config.unread_text
-    )
 
-# Запуск прослушки
-for event in longpoll.listen():
+    # Попытка обработать диалог
+    try:
+        sending.message(
+            vk=vk,
+            ID=dialog['message']['user_id'],
+            message=config.unread_text
+        )
 
-    # Если пришло новое сообщение сообществу:
-    if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+    # Если возникнет непредвиденная ошибка
+    except Exception as e:
+        message = f'{datetime.now()} - "{e}"'
 
-        # Добавление нового чата в бд
-        if event.user_id not in get_users():
-            if event.user_id not in get_users():
-                add_users({event.user_id})
-                sending.message(
-                    vk=vk,
-                    ID=event.user_id if event.from_user else event.chat_id,
-                    message=get_text('ПРИВЕТСТВИЕ')
-                )
+        # Отправить мне сообщение об ошибке
+        sending.message(
+            vk=vk,
+            ID=config.my_id,
+            message=message
+        )
 
-        # Если нет текста
-        if not event.text:
-            sending.message(
-                vk=vk,
-                ID=event.user_id if event.from_user else event.chat_id,
-                message=f'Не выполнены какие-то условия'
-            )
-            continue
+# Зацикливание запуска прослушки после исключений
+while True:
 
-        # Если ввели какую-то команду
-        if check.permission(config.orginizers, event.user_id) and event.text[0] in {'/', '!', '.'}:
+    # Попытка запустить прослушку
+    try:
 
-            # Разделение текста сообщения на команду и ее аргументы
-            text = list(map(str, event.text.split()))
-            command = text[0][1:]
+        # Запуск прослушки
+        for event in longpoll.listen():
 
-            try:
-                args = text[1:]
-            except IndexError:
-                args = []
+            # Если пришло новое сообщение сообществу:
+            if event.type == VkEventType.MESSAGE_NEW and event.to_me:
 
-            # Если команда существует, то отправить подтверждение начала выполнения команды
-            if command in config.commands.keys():
-                sending.message(
-                    vk=vk,
-                    ID=event.user_id if event.from_user else event.chat_id,
-                    message=f'Вызвана команда "{command}" с аргументами {args} в '
-                    f'{datetime.now().strftime("%H:%M")}'
-                )
-
-                # Обработчик команд
-                # РАССЫЛКА key(название рассылки) permission(кому отправить)
-                if check.permission(config.orginizers, event.user_id) and config.commands[command] == 1:
-
-                    try:
-                        key = args[0]
-                    except:
-                        key = 0
-
-                    try:
-                        permission = int(args[1])
-                    except:
-                        permission = -1
-
-                    if key in get_keys() and permission != -1:
-                        sending.default_sending(
-                            vk=vk,
-                            key=key,
-                            permission=permission
-                        )
-                        sending.message(
-                            vk=vk,
-                            ID=event.user_id,
-                            message=f'Рассылка отправлена'
-                        )
-                    elif not key:
-                        sending.unique_sending(vk)
-                        sending.message(
-                            vk=vk,
-                            ID=event.user_id,
-                            message=f'Рассылка отправлена'
-                        )
-                    else:
-                        sending.message(
-                            vk=vk,
-                            ID=event.user_id,
-                            message=f'Неверно введена команда'
-                        )
-
-                # ИЗМЕНИТЬ_ТЕКСТ key(название рассылки) permission(кому можно его отправлять) message(текст сообщения)
-                elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 2:
-                    try:
-                        key = args[0]
-                    except:
-                        key = 0
-
-                    try:
-                        permission = int(args[1])
-                    except:
-                        permission = -1
-
-                    try:
-                        message = ' '.join(args[2:])
-                    except:
-                        message = ''
-
-                    if key and permission != -1 and message:
-
-                        result = change.text(
-                            admin=event.user_id,
-                            key=key,
-                            message=message,
-                            permission=permission
-                        )
-
-                        sending.message(
-                            vk=vk,
-                            ID=event.user_id,
-                            message=result
-                        )
-
-                    else:
-                        sending.message(
-                            vk=vk,
-                            ID=event.user_id,
-                            message=f'Неверно введена команда'
-                        )
-
-                # ДОБАВИТЬ_ТЕКСТ key(название рассылки) permission(кому можно его отправлять) message(текст сообщения)
-                elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 3:
-                    try:
-                        key = args[0]
-                    except:
-                        key = 0
-
-                    try:
-                        permission = int(args[1])
-                    except:
-                        permission = -1
-
-                    try:
-                        message = ' '.join(args[2:])
-                    except:
-                        message = ''
-
-                    if key and permission != -1 and message:
-                        add_texts({
-                            key: [permission, message]
-                        })
-
-                        sending.message(
-                            vk=vk,
-                            ID=event.user_id,
-                            message=f'Добавлен новый текст рассылки "{key}"'
-                        )
-
-                    else:
-                        sending.message(
-                            vk=vk,
-                            ID=event.user_id,
-                            message=f'Неверно введена команда'
-                        )
-
-                # НАЗНАЧИТЬ_КМ km_link(айди КМа) first_name(имя гостя) last_name(фамилия гостя)
-                elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 4:
-                    try:
-                        km_link = args[0]
-                    except:
-                        km_link = ''
-
-                    try:
-                        first_name = args[1]
-                    except:
-                        first_name = ''
-
-                    try:
-                        last_name = args[2]
-                    except:
-                        last_name = ''
-
-                    if km_link and first_name and last_name:
-                        result = change.km_domain(
-                            km_limk=km_link,
-                            first_name=first_name,
-                            last_name=last_name
-                        )
-
-                        sending.message(
-                            vk=vk,
-                            ID=event.user_id,
-                            message=result
-                        )
-
-                    else:
-                        sending.message(
-                            vk=vk,
-                            ID=event.user_id,
-                            message=f'Неверно введена команда'
-                        )
-
-                # ИЗМЕНИТЬ_ПРАВА first_name(имя гостя) last_name(фамилия гостя) permission(новый уровень)
-                elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 5:
-                    try:
-                        first_name = args[0]
-                    except:
-                        first_name = ''
-
-                    try:
-                        last_name = args[1]
-                    except:
-                        last_name = ''
-
-                    try:
-                        permission = int(args[2])
-                    except:
-                        permission = -1
-
-                    if first_name and last_name and permission != -1:
-                        result = change.permission(
-                            first_name=first_name,
-                            last_name=last_name,
-                            permission=permission,
-                            admin=event.user_id
-                        )
-
-                        sending.message(
-                            vk=vk,
-                            ID=event.user_id,
-                            message=result
-                        )
-
-                    else:
-                        sending.message(
-                            vk=vk,
-                            ID=event.user_id,
-                            message=f'Неверно введена команда'
-                        )
-
-                else:
+                # Добавление нового юзера в бд и отправка текста ПРИВЕТСТВИЕ
+                if event.user_id not in get_users():
+                    add_users({event.user_id})
                     sending.message(
                         vk=vk,
                         ID=event.user_id if event.from_user else event.chat_id,
-                        message=f'Вызвана несуществующая команда "{command}" (или недостаточно прав) с аргументами'
-                        f'{args} в {datetime.now().strftime("%H:%M")}'
+                        message=get_text('ПРИВЕТСТВИЕ')
                     )
 
-            else:
-                sending.message(
-                    vk=vk,
-                    ID=event.user_id,
-                    message=f'Не сущесвует команды "{command}" с аргументами {args}'
-                )
+                # Если нет текста в полученном сообщении, то отправить текст ОШИБКА с кнопкой связи
+                if not event.text:
+                    message = config.problem_message + \
+                              f'vk.com/{get_km_domain(get_domain(event.user_id))}' + \
+                              f'\nТвой айди: {event.user_id}'
+                    sending.error_message(
+                        vk=vk,
+                        ID=event.user_id if event.from_user else event.chat_id,
+                        message=message
+                    )
+                    continue
 
-        elif event.text == 'Сообщить об ошибке':
-            km_domain, km_chat_id, name, surname, domain = get_user_info(event.user_id)
+                # Если ввели какую-то команду и есть права админа:
+                if check.permission(config.orginizers, event.user_id) and event.text[0] in {'/', '!', '.'}:
 
-            message = f'У {name} {surname} (vk.com/{domain}) возникла проблема'
-            sending.message(
-                vk=vk,
-                ID=km_chat_id,
-                message=message
-            )
+                    # Разделение текста сообщения на команду и ее аргументы
+                    text = list(map(str, event.text.split()))
+                    command = text[0][1:]
+                    try:
+                        args = text[1:]
+                    except IndexError:
+                        args = []
 
-            sending.message(
-                vk=vk,
-                ID=event.user_id,
-                message='Ждите ответа'
-            )
+                    # Если команда существует:
+                    if command in config.commands.keys():
 
-        # Если ввели текстовое сообщение, то перевести дальше или направить к личному КМу
-        else:
-            codes = get_codes(event.user_id)
-            try:
-                code = int(event.text)
-                if code in codes:
-                    level = codes.index(code)
-                    permission = get_permission(event.user_id)
-                    if level + 1 == permission:
-                        permission += 1
-                        user_info = vk.users.get(user_id=event.user_id)
-                        user_info = user_info[0]
-                        result = change.permission(
-                            first_name=user_info['first_name'],
-                            last_name=user_info['last_name'],
-                            permission=permission
+                        # Отправить подтверждение начала выполнения команды
+                        sending.message(
+                            vk=vk,
+                            ID=event.user_id if event.from_user else event.chat_id,
+                            message=f'Вызвана команда "{command}" с аргументами {args}'
                         )
+
+                        # Обработчик команд:
+
+                        # РАССЫЛКА key(название рассылки) permission(кому отправить)
+                        if config.commands[command] == 1:
+
+                            # Попытка считать все нужные параметры
+                            try:
+                                key = args[0]
+                            except IndexError:
+                                key = 0
+                            try:
+                                permission = int(args[1])
+                            except IndexError or ValueError:
+                                permission = -100
+
+                            # Если параметры есть и они верные:
+                            if key in get_keys() and permission != -100:
+
+                                # Запуск рассылки
+                                sending.default_sending(
+                                    vk=vk,
+                                    key=key,
+                                    permission=permission
+                                )
+
+                                # Уведомление об успешном завершении рассылки
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=f'Рассылка отправлена'
+                                )
+
+                            # Если параметров нет:
+                            elif not key:
+
+                                # Запуск индивидуальной рассылки
+                                sending.unique_sending(vk)
+
+                                # Уведомление об успешном завершении рассылки
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=f'Рассылка отправлена'
+                                )
+
+                            # Сообщение о неправильном вводе команды
+                            else:
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=f'Неверно введена команда'
+                                )
+
+                        # ИЗМЕНИТЬ_ТЕКСТ key(название рассылки) permission(кому его отправлять) message(текст сообщения)
+                        elif config.commands[command] == 2:
+
+                            # Попытка считать все нужные параметры
+                            try:
+                                key = args[0]
+                            except IndexError:
+                                key = 0
+                            try:
+                                permission = int(args[1])
+                            except IndexError or ValueError:
+                                permission = -100
+                            try:
+                                message = ' '.join(args[2:])
+                            except Exception as e:
+                                print(f'{datetime.now()} - "{e}"')
+                                message = ''
+
+                            # Если параметры есть и они верные:
+                            if key and permission != -100 and message:
+
+                                # Запуск изменения текста
+                                result = change.text(
+                                    admin=event.user_id,
+                                    key=key,
+                                    message=message,
+                                    permission=permission
+                                )
+
+                                # Уведомление о результате завершения изменения текста
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=result
+                                )
+
+                            # Сообщение о неправильном вводе команды
+                            else:
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=f'Неверно введена команда'
+                                )
+
+                        # ДОБАВИТЬ_ТЕКСТ key(название рассылки) permission(кому его отправлять) message(текст сообщения)
+                        elif config.commands[command] == 3:
+
+                            # Попытка считать все нужные параметры
+                            try:
+                                key = args[0]
+                            except IndexError:
+                                key = 0
+                            try:
+                                permission = int(args[1])
+                            except IndexError or ValueError:
+                                permission = -100
+                            try:
+                                message = ' '.join(args[2:])
+                            except Exception as e:
+                                print(f'{datetime.now()} - "{e}"')
+                                message = ''
+
+                            # Если параметры есть и они верные:
+                            if key and permission != -100 and message:
+
+                                # Запуск добавления текста
+                                add_texts(
+                                    {
+                                        key: [permission, message]
+                                    }
+                                )
+
+                                # Уведомление об успешном завершении добавления текста
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=f'Добавлен новый текст рассылки "{key}"'
+                                )
+
+                            # Сообщение о неправильном вводе команды
+                            else:
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=f'Неверно введена команда'
+                                )
+
+                        # НАЗНАЧИТЬ_КМ km_link(домен КМа) domain(домен гостя)
+                        elif config.commands[command] == 4:
+
+                            # Попытка считать все нужные параметры
+                            try:
+                                km_link = args[0]
+                            except IndexError:
+                                km_link = ''
+                            try:
+                                domain = args[1]
+                            except IndexError:
+                                domain = ''
+
+                            # Если параметры есть и они верные:
+                            if km_link and domain:
+
+                                # Запуск изменения КМа
+                                result = change.km_domain(
+                                    km_limk=km_link,
+                                    domain=domain
+                                )
+
+                                # Уведомление о результате изменения КМа
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=result
+                                )
+
+                            # Сообщение о неправильном вводе команды
+                            else:
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=f'Неверно введена команда'
+                                )
+
+                        # ИЗМЕНИТЬ_ПРАВА domain(домен гостя) permission(новый уровень)
+                        elif config.commands[command] == 5:
+
+                            # Попытка считать все нужные параметры
+                            try:
+                                domain = args[0]
+                            except IndexError:
+                                domain = ''
+                            try:
+                                permission = int(args[1])
+                            except IndexError:
+                                permission = -100
+
+                            # Если параметры есть и они верные
+                            if domain and permission != -100:
+
+                                # Запуск изменения прав доступа
+                                result = change.permission(
+                                    domain=domain,
+                                    permission=permission,
+                                    admin=event.user_id
+                                )
+
+                                # Уведомление о результате изменения прав доступа
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=result
+                                )
+
+                            # Сообщение о неправильном вводе команды
+                            else:
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=f'Неверно введена команда'
+                                )
+
+                        # ИНФО_КМ km_domain(домен кма)
+                        elif config.commands[command] == 6:
+
+                            # Попытка считать все нужные параметры
+                            try:
+                                km_domain = args[0]
+                            except IndexError:
+                                km_domain = ''
+
+                            # Если параметры есть и они верные:
+                            if km_domain in get_domains():
+
+                                # Формирование списка юзеров КМа
+                                message = f'К КМу vk.com/{km_domain} относятся:'
+                                for km_user in get_km_users(km_domain):
+                                    message += '\nvk.com/' + km_user
+
+                                # Отправка сформированного списка юзеров КМа
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=message
+                                )
+
+                            # Сообщение о неправильном вводе команды
+                            else:
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=f'Неверно введена команда'
+                                )
+
+                        # ИНФО_ГОСТЬ domain(домен гостя)
+                        elif config.commands[command] == 7:
+
+                            # Попытка считать все нужные параметры
+                            try:
+                                domain = args[0]
+                            except IndexError:
+                                domain = ''
+
+                            # Если параметры есть и они верные:
+                            if domain in get_domains():
+
+                                # Получение данных о юзере
+                                km_domain, km_chat_id, name, surname, domain = get_user_info(domain)
+
+                                # Формирования информационного текста о юзере
+                                message = f'Инфо про гостя {name} {surname} (vk.com/{domain})\n' \
+                                    f'За него отвечает vk.com/{km_domain}.\n' \
+                                    f'На данный момент он находится на уровне {get_permission(domain)}'
+
+                                # Отправка информации о юзере
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=message
+                                )
+
+                            # Сообщение о неправильном вводе команды
+                            else:
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=f'Неверно введена команда'
+                                )
+
+                        # НАЗВАНИЯ_РАССЫЛОК
+                        elif config.commands[command] == 8:
+
+                            # Формирование списка имеющихся рассылок
+                            message = f'Сейчас есть такие рассылки:'
+                            for key in get_keys():
+                                message += '\n' + key
+
+                            # Отправка сформированного списка имеющихся рассылок
+                            sending.message(
+                                vk=vk,
+                                ID=event.user_id,
+                                message=message
+                            )
+
+                        # ТЕКСТ key(название рассылки)
+                        elif config.commands[command] == 9:
+
+                            # Попытка считать все нужные параметры
+                            try:
+                                key = args[0]
+                            except IndexError:
+                                key = ''
+
+                            # Если параметры есть и они верные:
+                            if key in get_keys():
+
+                                # Формирование сообщения с текстом
+                                message = f'Текст рассылки "{key}":\n\n"{get_text(key)}"'
+
+                                # Отправка сообщения с текстом
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=message
+                                )
+
+                            # Сообщение о неправильном вводе команды
+                            else:
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=f'Неверно введена команда'
+                                )
+
+                        # Сообщение об ошибке (теоретически, невозможный вариант)
+                        else:
+                            sending.message(
+                                vk=vk,
+                                ID=event.user_id,
+                                message=f'Команда есть, но нет. Обратитесь к админам бота (или к руководству)'
+                            )
+
+                    # Сообщение о вызове несуществующей команды
+                    else:
                         sending.message(
                             vk=vk,
                             ID=event.user_id,
-                            message=f'Поздравляю! Ты успешно прошёл {permission - 1} этап.\n' +
-                                    get_text(str(permission - 1))
+                            message=f'Не сущесвует команды "{command}" с аргументами {args}'
                         )
 
+                # Если юзер обратился к своему КМу:
+                elif event.text == 'Сообщить об ошибке':
 
-                    else:
+                    # Получение информации о юзере
+                    km_domain, km_chat_id, name, surname, domain = get_user_info(get_domain(event.user_id))
+
+                    # Формирование сообщения КМу с данными о юзере
+                    message = f'У {name} {surname} (vk.com/{domain}) возникла проблема'
+
+                    # Отправка сформированного сообщения КМу с данными о юзере
+                    sending.message(
+                        vk=vk,
+                        ID=km_chat_id,
+                        message=message
+                    )
+
+                    # Уведомление об успешном вызове КМа
+                    sending.message(
+                        vk=vk,
+                        ID=event.user_id,
+                        message='Ждите ответа'
+                    )
+
+                # Если ввели текстовое сообщение:
+                else:
+                    # Уникальные коды юзера
+                    codes = get_codes(get_domain(event.user_id))
+
+                    # Если это код и он правильный:
+                    try:
+                        # Проверка на число
+                        code = int(event.text)
+
+                        # Если число верное:
+                        if code in codes:
+
+                            # Нынешний уровень юзера
+                            permission = get_permission(get_domain(event.user_id))
+
+                            # Если есть возможность перехода:
+                            if permission == 1 or permission == 2:
+
+                                # Изменение уровня
+                                permission += 1
+                                result = change.permission(
+                                    domain=get_domain(event.user_id),
+                                    permission=permission
+                                )
+
+                                # Уведомление об успешном переходе
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=get_text(f'ПЕРЕХОД{permission - 1}')
+                                )
+
+                            # Сообщить об ошибке с кнопкой связи
+                            else:
+                                message = config.problem_message + \
+                                          f'vk.com/{get_km_domain(get_domain(event.user_id))}' + \
+                                          f'\nТвой айди: {event.user_id}'
+                                sending.error_message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=message
+                                )
+
+                        # Сообщить об ошибке с кнопкой связи
+                        else:
+                            message = config.problem_message + \
+                                      f'vk.com/{get_km_domain(get_domain(event.user_id))}' + \
+                                      f'\nТвой айди: {event.user_id}'
+                            sending.error_message(
+                                vk=vk,
+                                ID=event.user_id,
+                                message=message
+                            )
+
+                    # Это не код или код неверный
+                    except ValueError:
+
+                        # Отправить сообщение об ошибке с кнопкой связи
+                        message = config.problem_message + \
+                                  f'vk.com/{get_km_domain(get_domain(event.user_id))}' + \
+                                  f'\nТвой айди: {event.user_id}'
                         sending.error_message(
                             vk=vk,
                             ID=event.user_id,
-                            message=config.problem_message +
-                                    'vk.com/' + get_km_domain(event.user_id) + '\nТвой айди: ' + str(event.user_id)
+                            message=message
                         )
 
-                else:
-                    sending.error_message(
-                        vk=vk,
-                        ID=event.user_id,
-                        message=config.problem_message +
-                                'vk.com/' + get_km_domain(event.user_id) + '\nТвой айди: ' + str(event.user_id)
-                    )
-            except:
-
-                sending.error_message(
-                    vk=vk,
-                    ID=event.user_id,
-                    message=config.problem_message +
-                            'vk.com/' + get_km_domain(event.user_id) + '\nТвой айди: ' + str(event.user_id)
-                )
+    # Если возникнет непредвиденная ошибка подключения:
+    except Exception as e:
+        message = f'{datetime.now()} - "{e}"'
+        print(f'{datetime.now()} - "{e}"')
