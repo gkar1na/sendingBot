@@ -65,14 +65,13 @@ while True:
                     sending.message(
                         vk=vk,
                         ID=event.user_id if event.from_user else event.chat_id,
-                        message=get_text('ПРИВЕТСТВИЕ')
+                        message=get_text('ПРИВЕТСТВИЕ_2')
                     )
 
                 # Если нет текста в полученном сообщении, то отправить текст ОШИБКА с кнопкой связи
                 if not event.text:
                     message = config.problem_message + \
-                              f'vk.com/{get_km_domain(get_domain(event.user_id))}' + \
-                              f'\nТвой айди: {event.user_id}'
+                              f'vk.com/{get_km_domain(get_domain(event.user_id))}'
                     sending.error_message(
                         vk=vk,
                         ID=event.user_id if event.from_user else event.chat_id,
@@ -104,20 +103,42 @@ while True:
                         # Обработчик команд:
 
                         # РАССЫЛКА key(название рассылки) permission(кому отправить)
-                        if config.commands[command] == 1:
+                        if check.permission(config.admins, event.user_id) and config.commands[command] == 1:
 
                             # Попытка считать все нужные параметры
+                            domains = []
                             try:
                                 key = args[0]
                             except IndexError:
                                 key = 0
                             try:
                                 permission = int(args[1])
-                            except IndexError or ValueError:
+                            except ValueError:
+                                permission = -100
+                                domains = args[1:]
+                            except IndexError:
                                 permission = -100
 
+                            # Если параметры верные и это индивидуальная рассылка
+                            if domains:
+                                # Отправить сообщение каждому пользователю
+                                message = get_text(key)
+                                for domain in domains:
+                                    sending.message(
+                                        vk=vk,
+                                        ID=get_id(domain),
+                                        message=message
+                                    )
+
+                                # Уведомление об успешном завершении рассылки
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=f'Рассылка отправлена'
+                                )
+
                             # Если параметры есть и они верные:
-                            if key in get_keys() and permission != -100:
+                            elif key in get_keys() and permission != -100:
 
                                 # Запуск рассылки
                                 sending.default_sending(
@@ -155,7 +176,7 @@ while True:
                                 )
 
                         # ИЗМЕНИТЬ_ТЕКСТ key(название рассылки) permission(кому его отправлять) message(текст сообщения)
-                        elif config.commands[command] == 2:
+                        elif check.permission(config.admins, event.user_id) and config.commands[command] == 2:
 
                             # Попытка считать все нужные параметры
                             try:
@@ -167,7 +188,13 @@ while True:
                             except IndexError or ValueError:
                                 permission = -100
                             try:
-                                message = ' '.join(args[2:])
+                                message = event.text[
+                                              event.text.find(f'/{command} {key} {permission} ') +
+                                              3 +
+                                              len(command) +
+                                              len(key) +
+                                              len(str(permission)):
+                                          ]
                             except Exception as e:
                                 print(f'{datetime.now()} - "{e}"')
                                 message = ''
@@ -199,7 +226,7 @@ while True:
                                 )
 
                         # ДОБАВИТЬ_ТЕКСТ key(название рассылки) permission(кому его отправлять) message(текст сообщения)
-                        elif config.commands[command] == 3:
+                        elif check.permission(config.admins, event.user_id) and config.commands[command] == 3:
 
                             # Попытка считать все нужные параметры
                             try:
@@ -211,7 +238,13 @@ while True:
                             except IndexError or ValueError:
                                 permission = -100
                             try:
-                                message = ' '.join(args[2:])
+                                message = event.text[
+                                              event.text.find(f'/{command} {key} {permission} ') +
+                                              3 +
+                                              len(command) +
+                                              len(key) +
+                                              len(str(permission)):
+                                          ]
                             except Exception as e:
                                 print(f'{datetime.now()} - "{e}"')
                                 message = ''
@@ -242,7 +275,7 @@ while True:
                                 )
 
                         # НАЗНАЧИТЬ_КМ km_link(домен КМа) domain(домен гостя)
-                        elif config.commands[command] == 4:
+                        elif check.permission(config.admins, event.user_id) and config.commands[command] == 4:
 
                             # Попытка считать все нужные параметры
                             try:
@@ -279,7 +312,7 @@ while True:
                                 )
 
                         # ИЗМЕНИТЬ_ПРАВА domain(домен гостя) permission(новый уровень)
-                        elif config.commands[command] == 5:
+                        elif check.permission(config.admins, event.user_id) and config.commands[command] == 5:
 
                             # Попытка считать все нужные параметры
                             try:
@@ -317,7 +350,7 @@ while True:
                                 )
 
                         # ИНФО_КМ km_domain(домен кма)
-                        elif config.commands[command] == 6:
+                        elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 6:
 
                             # Попытка считать все нужные параметры
                             try:
@@ -349,7 +382,7 @@ while True:
                                 )
 
                         # ИНФО_ГОСТЬ domain(домен гостя)
-                        elif config.commands[command] == 7:
+                        elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 7:
 
                             # Попытка считать все нужные параметры
                             try:
@@ -384,7 +417,7 @@ while True:
                                 )
 
                         # НАЗВАНИЯ_РАССЫЛОК
-                        elif config.commands[command] == 8:
+                        elif check.permission(config.admins, event.user_id) and config.commands[command] == 8:
 
                             # Формирование списка имеющихся рассылок
                             message = f'Сейчас есть такие рассылки:'
@@ -399,7 +432,7 @@ while True:
                             )
 
                         # ТЕКСТ key(название рассылки)
-                        elif config.commands[command] == 9:
+                        elif check.permission(config.admins, event.user_id) and config.commands[command] == 9:
 
                             # Попытка считать все нужные параметры
                             try:
@@ -428,12 +461,22 @@ while True:
                                     message=f'Неверно введена команда'
                                 )
 
-                        # Сообщение об ошибке (теоретически, невозможный вариант)
+                        # КОМАНДЫ
+                        elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 10:
+
+                            # Отправка имеющихся команд
+                            sending.message(
+                                vk=vk,
+                                ID=event.user_id,
+                                message=get_text('КОМАНДЫ')
+                            )
+
+                        # Сообщение о вызванной команде, которая недоступна
                         else:
                             sending.message(
                                 vk=vk,
                                 ID=event.user_id,
-                                message=f'Команда есть, но нет. Обратитесь к админам бота (или к руководству)'
+                                message=f'Недостаточно прав'
                             )
 
                     # Сообщение о вызове несуществующей команды
@@ -445,7 +488,7 @@ while True:
                         )
 
                 # Если юзер обратился к своему КМу:
-                elif event.text == 'Сообщить об ошибке':
+                elif event.text == 'Сообщить о проблеме':
 
                     # Получение информации о юзере
                     km_domain, km_chat_id, name, surname, domain = get_user_info(get_domain(event.user_id))
@@ -503,8 +546,7 @@ while True:
                             # Сообщить об ошибке с кнопкой связи
                             else:
                                 message = config.problem_message + \
-                                          f'vk.com/{get_km_domain(get_domain(event.user_id))}' + \
-                                          f'\nТвой айди: {event.user_id}'
+                                          f'vk.com/{get_km_domain(get_domain(event.user_id))}'
                                 sending.error_message(
                                     vk=vk,
                                     ID=event.user_id,
@@ -514,8 +556,7 @@ while True:
                         # Сообщить об ошибке с кнопкой связи
                         else:
                             message = config.problem_message + \
-                                      f'vk.com/{get_km_domain(get_domain(event.user_id))}' + \
-                                      f'\nТвой айди: {event.user_id}'
+                                      f'vk.com/{get_km_domain(get_domain(event.user_id))}'
                             sending.error_message(
                                 vk=vk,
                                 ID=event.user_id,
@@ -527,8 +568,7 @@ while True:
 
                         # Отправить сообщение об ошибке с кнопкой связи
                         message = config.problem_message + \
-                                  f'vk.com/{get_km_domain(get_domain(event.user_id))}' + \
-                                  f'\nТвой айди: {event.user_id}'
+                                  f'vk.com/{get_km_domain(get_domain(event.user_id))}'
                         sending.error_message(
                             vk=vk,
                             ID=event.user_id,

@@ -2,8 +2,8 @@
 # coding: utf-8
 
 TOKEN = 'TOKEN'
-admins = set()
-orginizers = {0}
+admins = {0}
+orginizers = {0, 10}
 
 commands = {
     'РАССЫЛКА': 1,
@@ -14,7 +14,8 @@ commands = {
     'ИНФО_КМ': 6,
     'ИНФО_ГОСТЬ': 7,
     'НАЗВАНИЯ_РАССЫЛОК': 8,
-    'ТЕКСТ': 9
+    'ТЕКСТ': 9,
+    'КОМАНДЫ': 10
 }
 
 texts = {

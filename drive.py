@@ -20,7 +20,7 @@ os.chdir('path_to_file')
 logging.basicConfig(
     filename='bot.log',
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    level=logging.WARNING
 )
 logger = logging.getLogger(__name__)
 
