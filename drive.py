@@ -73,7 +73,16 @@ def main():
     for row in rowData:
         values = row['values']
 
-        domain = values[22]['formattedValue'][values[22]['formattedValue'].rfind('/') + 1:]
+        link = values[22]['formattedValue']
+        if link.rfind('/') == -1:
+            if link.rfind('@') == -1:
+                index = -1
+            else:
+                index = link.rfind('@')
+        else:
+            index = link.rfind('/')
+
+        domain = values[22]['formattedValue'][index + 1:]
 
         if domain not in existing_domains:
             continue
@@ -93,7 +102,8 @@ def main():
                 sending.message(
                     vk=vk,
                     ID=get_id(domain),
-                    message=get_text('ПЕРЕХОД1')
+                    message=get_text('ПЕРЕХОД1'),
+                    attachment=get_attachment('ПЕРЕХОД1')
                 )
 
                 # Изменение уровня в БД
@@ -117,7 +127,8 @@ def main():
                 sending.message(
                     vk=vk,
                     ID=get_id(domain),
-                    message=get_text('ПЕРЕХОД2')
+                    message=get_text('ПЕРЕХОД2'),
+                    attachment=get_attachment('ПЕРЕХОД2')
                 )
 
                 # Изменение уровня в БД

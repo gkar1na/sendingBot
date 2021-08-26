@@ -6,6 +6,7 @@ from database import *
 from vk_api.longpoll import VkLongPoll, VkEventType
 import vk_api
 import logging
+import time
 
 
 # Подключение логов
@@ -59,13 +60,14 @@ while True:
             # Если пришло новое сообщение сообществу:
             if event.type == VkEventType.MESSAGE_NEW and event.to_me:
 
-                # Добавление нового юзера в бд и отправка текста ПРИВЕТСТВИЕ
+                # Добавление нового юзера в бд и отправка текста ПРИВЕТСТВИЕ_2
                 if event.user_id not in get_users():
                     add_users({event.user_id})
                     sending.message(
                         vk=vk,
                         ID=event.user_id if event.from_user else event.chat_id,
-                        message=get_text('ПРИВЕТСТВИЕ_2')
+                        message=get_text('ПРИВЕТСТВИЕ_2'),
+                        attachment=get_attachment('ПРИВЕТСТВИЕ_2')
                     )
 
                 # Если нет текста в полученном сообщении, то отправить текст ОШИБКА с кнопкой связи
@@ -77,6 +79,10 @@ while True:
                         ID=event.user_id if event.from_user else event.chat_id,
                         message=message
                     )
+
+                    # Задержка от спама
+                    time.sleep(config.delay)
+
                     continue
 
                 # Если ввели какую-то команду и есть права админа:
@@ -122,12 +128,13 @@ while True:
                             # Если параметры верные и это индивидуальная рассылка
                             if domains:
                                 # Отправить сообщение каждому пользователю
-                                message = get_text(key)
+
                                 for domain in domains:
                                     sending.message(
                                         vk=vk,
                                         ID=get_id(domain),
-                                        message=message
+                                        message=get_text(key),
+                                        attachment=get_attachment(key)
                                     )
 
                                 # Уведомление об успешном завершении рассылки
@@ -188,26 +195,32 @@ while True:
                             except IndexError or ValueError:
                                 permission = -100
                             try:
+                                attachment = args[2]
+                            except IndexError:
+                                attachment = ''
+                            try:
                                 message = event.text[
-                                              event.text.find(f'/{command} {key} {permission} ') +
-                                              3 +
+                                              event.text.find(f'/{command} {key} {permission} {attachment} ') +
+                                              5 +
                                               len(command) +
                                               len(key) +
-                                              len(str(permission)):
+                                              len(str(permission)) +
+                                              len(attachment):
                                           ]
                             except Exception as e:
                                 print(f'{datetime.now()} - "{e}"')
                                 message = ''
 
                             # Если параметры есть и они верные:
-                            if key and permission != -100 and message:
+                            if key and permission != -100 and message and attachment:
 
                                 # Запуск изменения текста
                                 result = change.text(
                                     admin=event.user_id,
                                     key=key,
                                     message=message,
-                                    permission=permission
+                                    permission=permission,
+                                    attachment=attachment
                                 )
 
                                 # Уведомление о результате завершения изменения текста
@@ -238,24 +251,29 @@ while True:
                             except IndexError or ValueError:
                                 permission = -100
                             try:
+                                attachment = args[2]
+                            except IndexError:
+                                attachment = None
+                            try:
                                 message = event.text[
-                                              event.text.find(f'/{command} {key} {permission} ') +
-                                              3 +
+                                              event.text.find(f'/{command} {key} {permission} {attachment} ') +
+                                              5 +
                                               len(command) +
                                               len(key) +
-                                              len(str(permission)):
+                                              len(str(permission)) +
+                                              len(attachment):
                                           ]
                             except Exception as e:
                                 print(f'{datetime.now()} - "{e}"')
                                 message = ''
 
                             # Если параметры есть и они верные:
-                            if key and permission != -100 and message:
+                            if key and permission != -100 and message and attachment:
 
                                 # Запуск добавления текста
                                 add_texts(
                                     {
-                                        key: [permission, message]
+                                        key: [permission, message, attachment]
                                     }
                                 )
 
@@ -444,7 +462,8 @@ while True:
                             if key in get_keys():
 
                                 # Формирование сообщения с текстом
-                                message = f'Текст рассылки "{key}":\n\n"{get_text(key)}"'
+                                message = f'Вложение: {get_attachment(key)}\n' \
+                                    f'Текст рассылки "{key}":\n\n"{get_text(key)}"'
 
                                 # Отправка сообщения с текстом
                                 sending.message(
@@ -468,7 +487,8 @@ while True:
                             sending.message(
                                 vk=vk,
                                 ID=event.user_id,
-                                message=get_text('КОМАНДЫ')
+                                message=get_text('КОМАНДЫ'),
+                                attachment=get_attachment('КОМАНДЫ')
                             )
 
                         # Сообщение о вызванной команде, которая недоступна
@@ -540,7 +560,8 @@ while True:
                                 sending.message(
                                     vk=vk,
                                     ID=event.user_id,
-                                    message=get_text(f'ПЕРЕХОД{permission - 1}')
+                                    message=get_text(f'ПЕРЕХОД{permission - 1}'),
+                                    attachment=get_attachment(f'ПЕРЕХОД{permission - 1}')
                                 )
 
                             # Сообщить об ошибке с кнопкой связи
@@ -574,6 +595,9 @@ while True:
                             ID=event.user_id,
                             message=message
                         )
+
+            # Задержка от спама
+            time.sleep(config.delay)
 
     # Если возникнет непредвиденная ошибка подключения:
     except Exception as e:

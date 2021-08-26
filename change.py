@@ -30,7 +30,7 @@ def permission(domain: str, permission: int, admin=0) -> str:
 
 
 @db_session
-def text(admin: int, key: str, message: str, permission: int) -> str:
+def text(admin: int, key: str, message: str, permission: int, attachment=None) -> str:
     exiting_keys = set(select(text.key for text in Text))
 
     if check.permission({0}, admin):
@@ -39,6 +39,7 @@ def text(admin: int, key: str, message: str, permission: int) -> str:
             Text[ID].key = key
             Text[ID].message = message
             Text[ID].permission = permission
+            Text[ID].attachment = attachment
             Text[ID].date = datetime.now().strftime(date_format)
             process = f'have changed Text[{ID}]'
         else:
