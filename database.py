@@ -304,11 +304,9 @@ def get_user_info(domain: str) -> tuple:
     """
     km_domain = get_km_domain(domain)
     km_chat_id = get(user.chat_id for user in User if user.domain == km_domain)
-    name = get(user.first_name for user in User if user.domain == domain)
-    surname = get(user.last_name for user in User if user.domain == domain)
-    domain = domain
+    name, surname = get((user.first_name, user.last_name) for user in User if user.domain == domain)
 
-    return km_domain, km_chat_id, name, surname, domain
+    return km_domain, km_chat_id, name, surname
 
 
 @db_session
