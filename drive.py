@@ -74,6 +74,8 @@ def main():
         values = row['values']
 
         link = values[22]['formattedValue']
+        link = ''.join(link.split())
+
         if link.rfind('/') == -1:
             if link.rfind('@') == -1:
                 index = -1
@@ -82,7 +84,7 @@ def main():
         else:
             index = link.rfind('/')
 
-        domain = values[22]['formattedValue'][index + 1:]
+        domain = link[index + 1:]
 
         if domain not in existing_domains:
             continue
@@ -92,55 +94,76 @@ def main():
         if permission == -100:
             continue
 
-        if permission == 1:
-            try:
-                # Подключение к сообществу
-                vk_session = vk_api.VkApi(token=config.TOKEN)
-                vk = vk_session.get_api()
+        try:
+            if permission == 1:
+                try:
+                    # Подключение к сообществу
+                    vk_session = vk_api.VkApi(token=config.TOKEN)
+                    vk = vk_session.get_api()
 
-                # Отправка уведомления об успешном переходе
-                sending.message(
-                    vk=vk,
-                    ID=get_id(domain),
-                    message=get_text('ПЕРЕХОД1'),
-                    attachment=get_attachment('ПЕРЕХОД1')
-                )
+                    # Отправка уведомления об успешном переходе
+                    sending.message(
+                        vk=vk,
+                        ID=get_id(domain),
+                        message=get_text('ПЕРЕХОД1'),
+                        attachment=get_attachment('ПЕРЕХОД1')
+                    )
 
-                # Изменение уровня в БД
-                change.permission(
-                    domain=domain,
-                    permission=2
-                )
+                    # Изменение уровня в БД
+                    change.permission(
+                        domain=domain,
+                        permission=2
+                    )
 
-            except Exception as e:
-                message = f'{datetime.now()} - "{e}"'
-                with open('bot.log', 'a') as file:
-                    print(message, file=file)
+                    km_domain, km_chat_id, name, surname = get_user_info(domain)
 
-        if permission == 2 and values[3] and values[3]['formattedValue'] == '1':
-            try:
-                # Подключение к сообществу
-                vk_session = vk_api.VkApi(token=config.TOKEN)
-                vk = vk_session.get_api()
+                    sending.message(
+                        vk=vk,
+                        ID=km_chat_id,
+                        message=f'Пользователь vk.com/{domain} зарегистрировался'
+                    )
 
-                # Отправка уведомления об успешном переходе
-                sending.message(
-                    vk=vk,
-                    ID=get_id(domain),
-                    message=get_text('ПЕРЕХОД2'),
-                    attachment=get_attachment('ПЕРЕХОД2')
-                )
+                except Exception as e:
+                    message = f'{datetime.now()} - "{e}"'
+                    with open('bot.log', 'a') as file:
+                        print(message, file=file)
 
-                # Изменение уровня в БД
-                change.permission(
-                    domain=domain,
-                    permission=3
-                )
+            if permission == 2 and \
+                    values[3] and 'formattedValue' in values[3].keys() and values[3]['formattedValue'] == '1':
+                try:
+                    # Подключение к сообществу
+                    vk_session = vk_api.VkApi(token=config.TOKEN)
+                    vk = vk_session.get_api()
 
-            except Exception as e:
-                message = f'{datetime.now()} - "{e}"'
-                with open('bot.log', 'a') as file:
-                    print(message, file=file)
+                    # Отправка уведомления об успешном переходе
+                    sending.message(
+                        vk=vk,
+                        ID=get_id(domain),
+                        message=get_text('ПЕРЕХОД2'),
+                        attachment=get_attachment('ПЕРЕХОД2')
+                    )
+
+                    # Изменение уровня в БД
+                    change.permission(
+                        domain=domain,
+                        permission=3
+                    )
+
+                    km_domain, km_chat_id, name, surname = get_user_info(domain)
+
+                    sending.message(
+                        vk=vk,
+                        ID=km_chat_id,
+                        message=f'Пользователь vk.com/{domain} оплатил'
+                    )
+
+                except Exception as e:
+                    message = f'{datetime.now()} - "{e}"'
+                    with open('bot.log', 'a') as file:
+                        print(message, file=file)
+
+        except Exception as e:
+            print(f'{datetime.now()} - "{e}" - {domain}')
 
 
 if __name__ == '__main__':
