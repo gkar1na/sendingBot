@@ -3,3 +3,9 @@
 *.sqlite
 /__pycache__/*
 database.x*
+*.jpg
+*.jpeg
+*.png
+test*
+token*
+credentials.*
