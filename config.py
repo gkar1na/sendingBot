@@ -40,6 +40,8 @@ km_domains = {
 
 headLogin = 'vk_id'
 
+drive_path = 'path_to_file_drive.py'
+
 start_text = 'Начало'
 
 problem_message = 'При возникновении вопросов пиши своему Наставнику: '

@@ -14,7 +14,7 @@ import config, change, database, sending
 from database import *
 import os
 
-os.chdir('path_to_file')
+os.chdir(config.drive_path)
 
 # Подключение логов
 logging.basicConfig(
