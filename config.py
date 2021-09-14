@@ -34,6 +34,10 @@ permissions = {
     3: 'ОПЛАТИЛ'
 }
 
+km_domains = {
+    0: 'domain'
+}
+
 headLogin = 'vk_id'
 
 start_text = 'Начало'
