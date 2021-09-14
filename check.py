@@ -19,6 +19,6 @@ def permission(needed_permissions: set, user_id: int) -> bool:
     """
 
     # Получение уровня пользователя
-    permission = get(user.permission for user in User if user_id == user.chat_id)
+    permission = get_permission(get_domain(user_id))
 
     return permission in needed_permissions

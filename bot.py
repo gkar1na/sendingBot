@@ -383,7 +383,7 @@ while True:
                                     message=f'Неверно введена команда'
                                 )
 
-                        # ИНФО_КМ km_domain(домен кма)
+                        # ИНФО_КМ km_domain(домен кма) permission(уровень, который вывести)
                         elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 6:
 
                             # Попытка считать все нужные параметры
@@ -391,16 +391,23 @@ while True:
                                 km_domain = args[0]
                             except IndexError:
                                 km_domain = ''
+                            try:
+                                permission = int(args[1])
+                            except IndexError:
+                                permission = -1
 
                             # Если параметры есть и они верные:
                             if km_domain in get_domains():
 
                                 # Формирование списка юзеров КМа
                                 message = f'К КМу vk.com/{km_domain} относятся:'
-                                number = 1
+                                number = 0
                                 for km_user in get_km_users(km_domain):
-                                    message += f'\n{number}) vk.com/{km_user} ({get_permission(km_user)})'
-                                    number += 1
+                                    if permission == -1 or check.permission({permission}, get_id(km_user)):
+                                        number += 1
+                                        message += f'\n{number}) vk.com/{km_user} ({get_permission(km_user)})'
+                                if not number:
+                                    message = f'У КМа vk.com/{km_domain} никого нет, либо это не КМ'
 
                                 # Отправка сформированного списка юзеров КМа
                                 sending.message(
