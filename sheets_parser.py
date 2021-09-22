@@ -107,16 +107,15 @@ def get_rooms(my_domain: str) -> dict:
 
             try:
 
-                if permission == 3:
-                    km_domain = get_km_domain(domain)
+                km_domain = get_km_domain(domain)
 
-                    if values[5] and 'formattedValue' in values[5].keys():
-                        room_number = values[5]['formattedValue']
-                    else:
-                        room_number = 'Комната не назначена'
+                if values[5] and 'formattedValue' in values[5].keys():
+                    room_number = values[5]['formattedValue']
+                else:
+                    room_number = 'КОМНАТА НЕ НАЗНАЧЕНА'
 
-                    if km_domain == my_domain:
-                        rooms.update([(domain, room_number)])
+                if km_domain == my_domain:
+                    rooms.update([(domain, room_number)])
 
             except Exception as e:
                 message = f'{datetime.now()} - "{e}" - {domain}'

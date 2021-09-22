@@ -7,6 +7,7 @@ from vk_api.longpoll import VkLongPoll, VkEventType
 import vk_api
 import logging
 import time
+import sheets_parser
 
 
 # Подключение логов
@@ -398,6 +399,8 @@ while True:
 
                             # Если параметры есть и они верные:
                             if km_domain in get_domains():
+                                # Получение словаря с комнатами
+                                rooms = sheets_parser.get_rooms(km_domain)
 
                                 # Формирование списка юзеров КМа
                                 message = f'К КМу vk.com/{km_domain} относятся:'
@@ -405,7 +408,12 @@ while True:
                                 for km_user in get_km_users(km_domain):
                                     if permission == -1 or check.permission({permission}, get_id(km_user)):
                                         number += 1
-                                        message += f'\n{number}) vk.com/{km_user} ({get_permission(km_user)})'
+                                        if km_user in rooms.keys():
+                                            message += f'\n{number}) vk.com/{km_user} ' \
+                                                f'(уровень {get_permission(km_user)}, комната {rooms[km_user]})'
+                                        else:
+                                            message += f'\n{number}) vk.com/{km_user} ' \
+                                                f'(уровень {get_permission(km_user)})'
                                 if not number:
                                     message = f'У КМа vk.com/{km_domain} никого нет, либо это не КМ'
 
@@ -435,7 +443,6 @@ while True:
 
                             # Если параметры есть и они верные:
                             if domain in get_domains():
-
                                 # Получение данных о юзере
                                 km_domain, km_chat_id, name, surname = get_user_info(domain)
 
