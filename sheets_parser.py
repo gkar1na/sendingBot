@@ -74,7 +74,7 @@ def get_rowData(spreadsheet_id: str, ranges: str) -> list:
 def get_rooms(my_domain: str) -> dict:
     rowData = get_rowData(
         spreadsheet_id=file_id,
-        ranges='A:AC'  # Диапазон читаемых столбцов
+        ranges='A:AC'  # диапазон читаемых столбцов
     )
 
     existing_domains = get_domains()
