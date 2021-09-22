@@ -3,14 +3,10 @@
 
 from __future__ import print_function
 import os.path
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
 from vk_api.longpoll import VkLongPoll, VkEventType
 import vk_api
 import logging
-import config, change, database, sending
+import config, change, database, sending, sheets_parser
 from database import *
 import os
 
@@ -28,45 +24,11 @@ db_logger = logging.getLogger('pony.orm')
 db_logger.setLevel(logging.WARNING)
 
 
-SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly', 'https://www.googleapis.com/auth/drive']
-
-
 def main():
-    creds = None
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
-
-    service = build('drive', 'v3', credentials=creds)
-
-    results = service.files().list(
-        pageSize=10, fields="nextPageToken, files(id, name)").execute()
-    items = results.get('files', [])
-
-    from googleapiclient import discovery
-
-    service = discovery.build('sheets', 'v4', credentials=creds)
-
-    # Айди таблицы
-    spreadsheet_id = config.file_id
-
-    # Диапазон читаемых столбцов
-    ranges = ['A:AC']
-
-    include_grid_data = True
-
-    request = service.spreadsheets().get(spreadsheetId=spreadsheet_id, ranges=ranges, includeGridData=include_grid_data)
-    response = request.execute()
-
-    rowData = response['sheets'][0]['data'][0]['rowData'][1:]
+    rowData = sheets_parser.get_rowData(
+        spreadsheet_id=config.file_id,
+        ranges='A:AC'
+    )
 
     existing_domains = database.get_domains()
 
