@@ -35,6 +35,11 @@ def make_domain(link: str) -> str:
 
     domain = link[index + 1:]
 
+    if domain.find(']') != -1:
+        domain = domain[:domain.find(']')] + domain[domain.find(']') + 1:]
+    if domain.find('[') != -1:
+        domain = domain[:domain.find(']')] + domain[domain.find(']') + 1:]
+
     return domain
 
 

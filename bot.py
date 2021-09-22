@@ -318,7 +318,7 @@ while True:
                             except IndexError:
                                 km_link = ''
                             try:
-                                domain = args[1]
+                                domain = sheets_parser.make_domain(args[1])
                             except IndexError:
                                 domain = ''
 
@@ -351,7 +351,7 @@ while True:
 
                             # Попытка считать все нужные параметры
                             try:
-                                domain = args[0]
+                                domain = sheets_parser.make_domain(args[0])
                             except IndexError:
                                 domain = ''
                             try:
@@ -389,7 +389,7 @@ while True:
 
                             # Попытка считать все нужные параметры
                             try:
-                                km_domain = args[0]
+                                km_domain = sheets_parser.make_domain(args[0])
                             except IndexError:
                                 km_domain = ''
                             try:
@@ -437,7 +437,7 @@ while True:
 
                             # Попытка считать все нужные параметры
                             try:
-                                domain = args[0]
+                                domain = sheets_parser.make_domain(args[0])
                             except IndexError:
                                 domain = ''
 
@@ -528,12 +528,12 @@ while True:
 
                             # Попытка считать все нужные параметры
                             try:
-                                old_domain = args[0]
+                                old_domain = sheets_parser.make_domain(args[0])
                             except IndexError:
                                 old_domain = ''
 
                             try:
-                                new_domain = args[1]
+                                new_domain = sheets_parser.make_domain(args[1])
                             except IndexError:
                                 new_domain = ''
 
