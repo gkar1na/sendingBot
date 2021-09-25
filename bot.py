@@ -562,6 +562,39 @@ while True:
                                     message=f'Неверно введена команда'
                                 )
 
+                        # ТРАНСФЕР domain(km domain)
+                        elif check.permission(config.orginizers, event.user_id) and config.commands[command] == 12:
+                            # Попытка считать все нужные параметры
+                            try:
+                                domain = sheets_parser.make_domain(args[0])
+                            except IndexError:
+                                domain = ''
+
+                            if domain:
+
+                                transfer = sheets_parser.get_transfer(domain)
+
+                                messages = []
+
+                                for i, person in enumerate(transfer.keys()):
+                                    messages.append(f'{i + 1}) vk.com/{person} - {transfer[person]}')
+
+                                message = '\n'.join(messages)
+
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=message
+                                )
+
+                            # Сообщение о неправильном вводе команды
+                            else:
+                                sending.message(
+                                    vk=vk,
+                                    ID=event.user_id,
+                                    message=f'Неверно введена команда'
+                                )
+
                         # Сообщение о вызванной команде, которая недоступна
                         else:
                             sending.message(

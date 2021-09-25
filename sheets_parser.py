@@ -130,3 +130,58 @@ def get_rooms(my_domain: str) -> dict:
             pass
 
     return rooms
+
+
+def get_transfer(my_domain: str) -> dict:
+    rowData = get_rowData(
+        spreadsheet_id=file_id,
+        ranges='A:AC'  # диапазон читаемых столбцов
+    )
+
+    existing_domains = get_domains()
+
+    transfer = {}
+
+    for row in rowData:
+        try:
+            values = row['values']
+
+            if values[22] and 'formattedValue' in values[22].keys():
+                link = values[22]['formattedValue']
+                link = ''.join(link.split())
+            else:
+                link = '-'
+
+            if link == '-':
+                continue
+
+            domain = make_domain(link)
+
+            if domain not in existing_domains:
+                continue
+
+            permission = get_permission(domain)
+
+            if permission == -100:
+                continue
+
+            try:
+                if permission == 3:
+                    km_domain = get_km_domain(domain)
+
+                    if values[13] and 'formattedValue' in values[13].keys():
+                        trnsfr = values[13]['formattedValue']
+                    else:
+                        trnsfr = 'ТРАНСФЕР НЕ НАЗНАЧЕН'
+
+                    if km_domain == my_domain:
+                        transfer.update([(domain, trnsfr)])
+
+            except Exception as e:
+                message = f'{datetime.now()} - sheets_parser.get_transfer() - "{e}" - {domain}'
+                transfer.update([(domain, message)])
+
+        except Exception as e:
+            pass
+
+    return transfer
