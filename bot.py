@@ -636,7 +636,7 @@ while True:
                     )
 
                 # Идентификация организатора
-                elif event.text == 'яорганизаторлучшегопосвята':
+                elif event.text == 'кодоваяфраза':
 
                     domain = get_domain(event.user_id)
                     km_domain, km_chat_id, name, surname = get_user_info(domain)
