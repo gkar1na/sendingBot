@@ -35,11 +35,13 @@ permissions = {
     3: 'ОПЛАТИЛ'
 }
 
-headLogin = 'vk_id'
-
 km_domains = {
     0: 'domain'
 }
+
+headLogin = 'vk_id'
+
+drive_path = 'path_to_file_drive.py'
 
 start_text = 'Начало'
 
