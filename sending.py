@@ -5,6 +5,7 @@ from database import *
 import vk_api
 from vk_api.utils import get_random_id
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+import time
 
 
 @db_session
@@ -30,6 +31,7 @@ def default_sending(vk: vk_api.vk_api.VkApiMethod, key: str, permission=-1) -> N
             vk.messages.send(
                 user_id=user,
                 message=get_text(key),
+                attachment=get_attachment(key),
                 random_id=get_random_id()
             )
 
@@ -43,6 +45,10 @@ def default_sending(vk: vk_api.vk_api.VkApiMethod, key: str, permission=-1) -> N
                 random_id=get_random_id()
             )
 
+        # Задержка от спама
+        time.sleep(config.delay)
+
+
 @db_session
 def unique_sending(vk: vk_api.vk_api.VkApiMethod) -> None:
     """Функция, рассылающая уникальные сообщения каждому пользователю.
@@ -51,14 +57,15 @@ def unique_sending(vk: vk_api.vk_api.VkApiMethod) -> None:
     users = set(select((user.chat_id, user.permission) for user in User if user.chat_id != 0))
 
     for user in users:
-        messages = set(select(text.message for text in Text if text.permission == user[1])) or \
-                  set(select(text.message for text in Text if text.permission == -1))
+        messages = set(select((text.message, text.attachment) for text in Text if text.permission == user[1])) or \
+                  set(select((text.message, text.attachment) for text in Text if text.permission == -1))
 
-        for message in messages:
+        for message, attachment in messages:
             try:
                 vk.messages.send(
                     user_id=user[0],
                     message=message,
+                    attachment=attachment,
                     random_id=get_random_id()
                 )
 
@@ -72,12 +79,16 @@ def unique_sending(vk: vk_api.vk_api.VkApiMethod) -> None:
                     random_id=get_random_id()
                 )
 
+            # Задержка от спама
+            time.sleep(config.delay)
 
-def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None) -> None:
+
+def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None, attachment=None) -> None:
     try:
         vk.messages.send(
             user_id=ID,
             message=message,
+            attachment=attachment,
             random_id=get_random_id(),
             keyboard=None if not keyboard else keyboard.get_keyboard()
         )
@@ -93,7 +104,7 @@ def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None)
         )
 
 
-def error_message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str) -> None:
+def error_message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, attachment=None) -> None:
     keyboard = VkKeyboard(inline=True)
     keyboard.add_button('Сообщить о проблеме', color=VkKeyboardColor.NEGATIVE)
 
@@ -101,6 +112,7 @@ def error_message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str) -> None:
         vk.messages.send(
             user_id=ID,
             message=message,
+            attachment=attachment,
             random_id=get_random_id(),
             keyboard=keyboard.get_keyboard()
         )

@@ -33,6 +33,7 @@ class Text(db.Entity):
     permission = Required(int)
     key = Required(str)
     message = Required(str)
+    attachment = Required(str)
     date = Required(str)
 
 
@@ -77,27 +78,46 @@ def add_users(users: set) -> None:
         # Если пользователя не было в БД:
         if user not in old_users:
 
-            # Получение уровня доступа
-            admin = int(not (user in config.admins | old_admins))
+            # Если пользователь реален
+            if user:
+                # Получение уровня доступа
+                admin = int(not (user in config.admins | old_admins))
 
-            # Получение информации о пользователе
-            user_info = vk.users.get(user_id=user, fields='domain')
-            user_info = user_info[0]
+                # Получение информации о пользователе
+                user_info = vk.users.get(user_id=user, fields='domain')
+                user_info = user_info[0]
 
-            # Заполнение новой строки в таблице юзеров
-            User(
-                first_name=user_info['first_name'],
-                last_name=user_info['last_name'],
-                domain=user_info['domain'],
-                chat_id=user,
-                permission=admin,
-                codes='\n'.join([str(randint(10000000, 100000000)) for i in range(len(config.permissions) - 2)]),
-                km_domain=config.km_domains[len(get_users()) % len(config.km_domains.keys())],
-                date=datetime.now().strftime(date_format)
-            )
+                # Заполнение новой строки в таблице юзеров
+                User(
+                    first_name=user_info['first_name'],
+                    last_name=user_info['last_name'],
+                    domain=user_info['domain'],
+                    chat_id=user,
+                    permission=admin,
+                    codes='\n'.join([str(randint(10000000, 100000000)) for i in range(len(config.permissions) - 2)]),
+                    km_domain=config.km_domains[len(get_users()) % len(config.km_domains.keys())],
+                    date=datetime.now().strftime(date_format)
+                )
 
-            # Добавление пользователя в сет старых пользователей
-            old_users.add(user)
+                # Добавление пользователя в сет старых пользователей
+                old_users.add(user)
+
+            # Если это сервисный пользователь
+            else:
+                # Заполнение новой строки в таблице юзеров
+                User(
+                    first_name='admin',
+                    last_name='admin',
+                    domain='admin',
+                    chat_id=user,
+                    permission=0,
+                    codes='\n'.join([str(randint(10000000, 100000000)) for i in range(len(config.permissions) - 2)]),
+                    km_domain=config.km_domains[len(get_users()) % len(config.km_domains.keys())],
+                    date=datetime.now().strftime(date_format)
+                )
+
+                # Добавление пользователя в сет старых пользователей
+                old_users.add(user)
 
 
 @db_session
@@ -129,6 +149,7 @@ def add_texts(texts: dict) -> None:
                 permission=texts[key][0],
                 key=key,
                 message=texts[key][1],
+                attachment=texts[key][2],
                 date=datetime.now().strftime(date_format)
             )
 
@@ -232,6 +253,19 @@ def get_text(key: str) -> str:
 
 
 @db_session
+def get_attachment(key: str) -> str:
+    """Функция получения вложения определенного текста из БД.
+
+    :param key: заголовок нужного текста
+    :type key: str
+
+    :return: вложение текста с заданным заголовком
+    :rtype: str
+    """
+    return get(text.attachment for text in Text if text.key == key)
+
+
+@db_session
 def get_km_domain(domain: str) -> str:
     """Функция получения домена КМа определенного пользователя из БД.
 
@@ -270,11 +304,9 @@ def get_user_info(domain: str) -> tuple:
     """
     km_domain = get_km_domain(domain)
     km_chat_id = get(user.chat_id for user in User if user.domain == km_domain)
-    name = get(user.first_name for user in User if user.domain == domain)
-    surname = get(user.last_name for user in User if user.domain == domain)
-    domain = domain
+    name, surname = get((user.first_name, user.last_name) for user in User if user.domain == domain)
 
-    return km_domain, km_chat_id, name, surname, domain
+    return km_domain, km_chat_id, name, surname
 
 
 @db_session
