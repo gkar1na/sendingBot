@@ -54,3 +54,5 @@ file_id = 'file_id'
 my_id = 0
 
 db_path = 'DB_PATH'
+
+date_format = '%d.%m.%y %H:%M:%S'
