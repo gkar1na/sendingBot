@@ -52,3 +52,5 @@ unread_text = 'Сообщения не получилось обработать
 file_id = 'file_id'
 
 my_id = 0
+
+db_path = 'DB_PATH'
