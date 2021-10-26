@@ -12,6 +12,12 @@ from config import date_format, title_welcome, my_id
 from database import engine, get_session, User, Text, Step, Command
 import commandHandler
 
+errors = {
+    1: 'Недостаточно аргументов.',
+    2: 'Такого текста не существует.',
+    3: 'Такой текст уже существует.'
+}
+
 
 # Подключение логов
 logging.basicConfig(
@@ -196,7 +202,9 @@ while True:
                         sending.message(
                             vk=vk,
                             ID=event.user_id,
-                            message=f'===== Команда "{command}" не выполнена. =========='
+                            message=f'=== Команда "{command}" не выполнена. ===\n'
+                                    f'{errors[response]}\n'
+                                    f'========================================='
                         )
 
                         # Завершение работы в БД
@@ -212,8 +220,7 @@ while True:
                     sending.message(
                         vk=vk,
                         ID=event.user_id,
-                        message='Заголовок нового текста успешно добавлен.\n'
-                                'Введите /update_text "{title}" "{text}", чтобы добавить текст.'
+                        message='Команда успешно выполнена.'
                     )
 
                     # Завершение работы в БД
