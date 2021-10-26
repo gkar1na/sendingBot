@@ -13,6 +13,7 @@ from database import engine, get_session, User, Text, Step, Command
 import commandHandler
 
 errors = {
+    -1: 'Неизвестная ошибка.',
     1: 'Недостаточно аргументов.',
     2: 'Такого текста не существует.',
     3: 'Такой текст уже существует.',
@@ -179,7 +180,7 @@ while True:
                     args = re.findall('/(.*?)/', event.text, re.DOTALL)
 
                     # Обработчик команд:
-                    response = 0
+                    response = -1
 
                     # send_message "{text.title}" "OPTIONALLY: {step.number} | {step.name}"
                     if command == 'send_message':
