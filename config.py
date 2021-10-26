@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     UNREAD_MESSAGE_TEXT: Optional[str]
 
     DB_PATH: Optional[str]
+    TITLE_WELCOME: Optional[str]
 
     DELAY: Optional[float]
 
@@ -29,4 +30,4 @@ class Settings(BaseSettings):
         # env_prefix = 'TEST_' + env_prefix
 
 
-settings = Settings()
+settings = Settings(
