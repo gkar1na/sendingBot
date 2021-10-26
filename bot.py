@@ -94,7 +94,7 @@ while True:
                         domain=user_info['domain'],
                         first_name=user_info['first_name'],
                         last_name=user_info['last_name'],
-                        step=0,
+                        step=1,
                         texts=json.dumps([]),
                         admin=False,
                         date=datetime.now()
