@@ -1,13 +1,12 @@
 .idea/*
 .gitignore___jb_old___
-*.sqlite
 /__pycache__/*
-database.x*
 *.jpg
 *.jpeg
 *.png
 *.py___jb_old___
-*test*
-token.json
-credentials.json
+tests
+*token*
+*credential*
 *.log
+*.env*

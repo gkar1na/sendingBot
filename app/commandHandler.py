@@ -1,18 +1,16 @@
-import json
-
 from vk_api.longpoll import Event
-from vk_api.longpoll import VkLongPoll, VkEventType
+from vk_api.longpoll import VkLongPoll
 import vk_api
 from typing import List
 from datetime import datetime
 import json
 
-from database import get_session, engine, Text, User, Step, Command
-from config import TOKEN
-import sending as send
+from database.create_tables import get_session, engine, Text, User, Step, Command
+from config import settings
+from app import sending as send
 
 # Подключение к сообществу
-vk_session = vk_api.VkApi(token=TOKEN)
+vk_session = vk_api.VkApi(token=settings.VK_BOT_TOKEN)
 longpoll = VkLongPoll(vk_session)
 vk = vk_session.get_api()
 

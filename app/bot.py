@@ -8,9 +8,9 @@ import time
 from datetime import datetime
 import re
 
-from config import title_welcome, my_id
-from database import engine, get_session, User, Text, Step, Command
+from database.create_tables import engine, get_session, User, Text, Command
 import commandHandler
+from config import settings
 
 errors = {
     -1: 'Неизвестная ошибка.',
@@ -33,12 +33,12 @@ logger = logging.getLogger(__name__)
 
 
 # Подключение к сообществу
-vk_session = vk_api.VkApi(token=config.TOKEN)
+vk_session = vk_api.VkApi(token=settings.VK_BOT_TOKEN)
 longpoll = VkLongPoll(vk_session)
 vk = vk_session.get_api()
 
 # Текст сообщения для необработанных диалогов
-message = config.unread_text
+message = settings.UNREAD_MESSAGE_TEXT
 
 # Оповещение необработанным диалогам
 for dialog in vk.messages.getDialogs(unanswered=1)['items']:
@@ -63,7 +63,7 @@ for dialog in vk.messages.getDialogs(unanswered=1)['items']:
             message = f'Пользователю vk.com/{user.domain} ({ID}) не отправилось сообщение по причине: "{e}"'
             sending.message(
                 vk=vk,
-                ID=config.my_id,
+                ID=settings.MY_VK_ID,
                 message=message
             )
         session.close()
@@ -103,7 +103,7 @@ while True:
                     session.add(user)
                     logger.info(f'Добавлен пользователь: chat_id="{event.user_id}", link=vk.com/{user_info["domain"]}')
 
-                    text_welcome = session.query(Text).filter_by(title=title_welcome).first()
+                    text_welcome = session.query(Text).filter_by(title=settings.TITLE_WELCOME).first()
                     if text_welcome:
                         sending.message(
                             vk=vk,
@@ -118,7 +118,7 @@ while True:
 
                     sending.message(
                         vk=vk,
-                        ID=my_id,
+                        ID=settings.MY_VK_ID,
                         message=f'Пользователь vk.com/{user_info["domain"]} ({event.user_id}) написал боту.'
                     )
 
@@ -132,7 +132,7 @@ while True:
                     session.close()
 
                     # Задержка от спама
-                    time.sleep(config.delay)
+                    time.sleep(settings.DELAY)
 
                     continue
 
@@ -144,7 +144,7 @@ while True:
                     session.close()
 
                     # Задержка от спама
-                    time.sleep(config.delay)
+                    time.sleep(settings.DELAY)
 
                     # print('ignore')
                     continue
@@ -239,7 +239,7 @@ while True:
                         session.close()
 
                         # Задержка от спама
-                        time.sleep(config.delay)
+                        time.sleep(settings.DELAY)
 
                         continue
 
@@ -255,7 +255,7 @@ while True:
                     session.close()
 
                     # Задержка от спама
-                    time.sleep(config.delay)
+                    time.sleep(settings.DELAY)
 
                 # Сообщение о вызове недоступной команды
                 else:
@@ -266,7 +266,7 @@ while True:
                     )
 
             # Задержка от спама
-            time.sleep(config.delay)
+            time.sleep(settings.DELAY)
 
     # Запись в консоль об ошибке с подключением
     except Exception as e:

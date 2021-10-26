@@ -1,9 +1,10 @@
 import vk_api
 from vk_api.utils import get_random_id
 from vk_api.keyboard import VkKeyboard
+import time
 
-from database import get_session, engine, User
-from config import my_id
+from database.create_tables import get_session, engine, User
+from config import settings
 
 
 def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None, attachment=None) -> None:
@@ -38,6 +39,9 @@ def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None,
             keyboard=None if not keyboard else keyboard.get_keyboard()
         )
 
+        # Задержка от спама
+        time.sleep(settings.DELAY)
+
     # Оповещение о недошедшем сообщении
     except Exception as e:
         session = get_session(engine)
@@ -47,10 +51,10 @@ def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None,
             domain = session.query(User).filter_by(chat_id=ID).first().domain
 
             message = f'Пользователю vk.com/{domain} ({ID})' \
-                f'не отправилось сообщение "{message}"\n' \
+                      f'не отправилось сообщение "{message}"\n' \
                 f'По причине: "{e}"'
             vk.messages.send(
-                user_id=my_id,
+                user_id=settings.MY_VK_ID,
                 message=message,
                 random_id=get_random_id()
-            )
+        
