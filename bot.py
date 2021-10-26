@@ -17,7 +17,8 @@ errors = {
     2: 'Такого текста не существует.',
     3: 'Такой текст уже существует.',
     4: 'Такого шага не существует.',
-    5: 'Такого пользователя не существует.'
+    5: 'Такого пользователя не существует.',
+    6: 'Существуют только значения "True" и "False" (регистр не важен)'
 }
 
 
@@ -204,6 +205,10 @@ while True:
                     # get_commands
                     elif command == 'get_commands':
                         response = commandHandler.get_commands(event, args)
+
+                    # update_user_admin "{user.domain}" "{user.admin}"
+                    elif command == 'update_user_admin':
+                        response = commandHandler.update_user_admin(event, args)
 
                     if response:
 

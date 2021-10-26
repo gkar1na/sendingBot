@@ -276,3 +276,38 @@ def get_commands(event: Event, args: List[str]) -> int:
     session.close()
 
     return 0
+
+
+# args = [{user.domain}, {user.admin]
+def update_user_admin(event: Event, args: List[str]) -> int:
+    if len(args) < 2 or not args[0] or not args[1]:
+        return 1
+
+    params = {'domain': args[0]}
+
+    # Подключение к БД
+    session = get_session(engine)
+
+    user = session.query(User).filter_by(**params).first()
+
+    if not user:
+        # Завершение работы в БД
+        session.close()
+
+        return 5
+
+    if args[1].lower() == 'true':
+        user.admin = True
+    elif args[1].lower() == 'false':
+        user.admin = False
+    else:
+        # Завершение работы в БД
+        session.close()
+
+        return 6
+
+    # Завершение работы в БД
+    session.commit()
+    session.close()
+
+    return 0
