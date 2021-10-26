@@ -60,13 +60,17 @@ def send_message(event: Event, args: List[str]) -> int:
     text = session.query(Text).filter_by(**params).first()
 
     if text:
-        for chat_id in session.query(User.chat_id):
-            send.message(
-                vk=vk,
-                ID=chat_id[0],
-                message=text.text,
-                attachment=text.attachment
-            )
+        for user in session.query(User):
+            texts = json.loads(user.texts)
+            if text.text_id not in texts:
+                send.message(
+                    vk=vk,
+                    ID=user.chat_id,
+                    message=text.text,
+                    attachment=text.attachment
+                )
+                texts.append(text.text_id)
+                user.texts = json.dumps(texts)
 
     else:
         # Завершение работы в БД
