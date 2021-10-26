@@ -384,3 +384,30 @@ def get_texts(event: Event, args: List[str]) -> int:
     session.close()
 
     return 0
+
+
+# args = []
+def get_users(event: Event, args: List[str]) -> int:
+    # Подключение к БД
+    session = get_session(engine)
+
+    users = session.query(User)
+
+    message_text = f'Сейчас есть информация о {users.count() - 1} пользователях:\n'
+    number = 1
+    for user in users:
+        if user.chat_id != event.user_id:
+            message_text += f'\n{number}) vk.com/{user.domain} - {user.first_name} {user.last_name}'
+            number += 1
+
+    send.message(
+        vk=vk,
+        ID=event.user_id,
+        message=message_text
+    )
+
+    # Завершение работы в БД
+    session.commit()
+    session.close()
+
+    return 0

@@ -30,4 +30,4 @@ class Settings(BaseSettings):
         # env_prefix = 'TEST_' + env_prefix
 
 
-settings = Settings(
+settings = Settings()

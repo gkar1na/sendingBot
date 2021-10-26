@@ -223,6 +223,10 @@ while True:
                     elif command == 'get_texts':
                         response = commandHandler.get_texts(event, args)
 
+                    # get_users
+                    elif command == 'get_users':
+                        response = commandHandler.get_users(event, args)
+
                     if response:
 
                         # Отправить уведомление о некорректном завершении работы команды
