@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 import re
 
-from config import date_format, title_welcome, my_id
+from config import title_welcome, my_id
 from database import engine, get_session, User, Text, Step, Command
 import commandHandler
 

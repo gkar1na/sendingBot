@@ -8,7 +8,7 @@ from datetime import datetime
 import json
 
 from database import get_session, engine, Text, User, Step, Command
-from config import date_format, TOKEN
+from config import TOKEN
 import sending as send
 
 # Подключение к сообществу
