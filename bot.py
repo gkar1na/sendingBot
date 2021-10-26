@@ -89,7 +89,7 @@ while True:
                     # Получение информации о пользователе
                     user_info = vk.users.get(user_id=event.user_id, fields='domain')
                     user_info = user_info[0]
-                    session.add(User(
+                    user = User(
                         chat_id=event.user_id,
                         domain=user_info['domain'],
                         first_name=user_info['first_name'],
@@ -98,7 +98,8 @@ while True:
                         texts=json.dumps([]),
                         admin=False,
                         date=datetime.now()
-                    ))
+                    )
+                    session.add(user)
                     logger.info(f'Добавлен пользователь: chat_id="{event.user_id}", link=vk.com/{user_info["domain"]}')
 
                     text_welcome = session.query(Text).filter_by(title=title_welcome).first()
@@ -109,6 +110,9 @@ while True:
                             message=text_welcome.text,
                             attachment=text_welcome.attachment
                         )
+                        texts = json.loads(user.texts)
+                        texts.append(text_welcome.text_id)
+                        user.texts = json.dumps(texts)
                     del text_welcome
 
                     sending.message(
@@ -258,4 +262,3 @@ while True:
     # Запись в консоль об ошибке с подключением
     except Exception as e:
         print(f'{datetime.now()} - "{e}"')
-
