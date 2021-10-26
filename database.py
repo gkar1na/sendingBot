@@ -23,7 +23,7 @@ class Step(db):
 
 # Таблица пользователей
 class User(db):
-    __tablename__ = 'user'
+    __tablename__ = 'vk_user'
 
     chat_id = Column(Integer, primary_key=True)
     domain = Column(String, unique=True)
@@ -38,7 +38,8 @@ class User(db):
 # Таблица с текстами
 class Text(db):
     __tablename__ = 'text'
-    text_id = Column(Integer, primary_key=True)
+
+    text_id = Column(Integer, primary_key=True, autoincrement=True)
     step = Column(Integer, ForeignKey('step.number', onupdate='cascade'))
     title = Column(String, unique=True)
     text = Column(String)
@@ -46,10 +47,25 @@ class Text(db):
     date = Column(DateTime)
 
 
+# Таблица с командами
+class Command(db):
+    __tablename__ = 'command'
+
+    name = Column(String, primary_key=True)
+    admin = Column(Boolean)
+
+
 # Создание таблиц
 def create_tables(engine: Engine) -> None:
     db.metadata.create_all(engine)
-
+    session = get_session(engine)
+    # session.add(Step(number=0, name='написал'))
+    # session.add(Text(title='title_welcome', text='Привет'))
+    # session.add(Command(name='new_title', admin=True))
+    # session.add(Command(name='update_text', admin=True))
+    session.add(Command(name='send_message', admin=True))
+    session.commit()
+    session.close()
 
 # Создание сессии
 def get_session(engine: Engine) -> Session:
