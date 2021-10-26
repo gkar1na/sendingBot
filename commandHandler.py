@@ -106,7 +106,29 @@ def update_text(event: Event, args: List[str]) -> int:
     return 0
 
 
+# args = [{text.title}, {text.attachment}]
 def update_attachment(event: Event, args: List[str]) -> int:
+    if len(args) < 2 or not args[0] or not args[1]:
+        return 1
+
+    params = {'title': args[0]}
+
+    # Подключение к БД
+    session = get_session(engine)
+
+    text = session.query(Text).filter_by(**params).first()
+
+    if not text:
+        # Завершение работы в БД
+        session.close()
+
+        return 2
+
+    text.attachment = args[1]
+
+    # Завершение работы в БД
+    session.commit()
+    session.close()
 
     return 0
 
