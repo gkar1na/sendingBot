@@ -1,11 +1,32 @@
-TOKEN = 'TOKEN'
+from pydantic import BaseSettings
+from typing import Optional
 
-delay = 0
 
-title_welcome = 'title_welcome'
+class Settings(BaseSettings):
+    """ Instance stores all app settings, mainly environment variables """
+    PROJECT_NAME: str = 'MovementAcademy'
 
-unread_text = 'unread_text'
+    VK_BOT_TOKEN: Optional[str]
 
-my_id = 0
+    STEPS: Optional[str]
+    COMMANDS: Optional[str]
+    TEXTS: Optional[str]
 
-db_path = 'path_to_db'
+    MY_VK_ID: Optional[int]
+
+    UNREAD_MESSAGE_TEXT: Optional[str]
+
+    DB_PATH: Optional[str]
+
+    DELAY: Optional[float]
+
+    class Config:
+        env_prefix = 'MOVEMENT_ACADEMY_'
+        env_file = '.env'
+        env_file_encoding = 'utf-8'
+
+        # uncomment when testing
+        # env_prefix = 'TEST_' + env_prefix
+
+
+settings = Settings()
