@@ -1,12 +1,22 @@
+========== building files ==========
 .idea/*
 .gitignore___jb_old___
 /__pycache__/*
-*.jpg
-*.jpeg
-*.png
 *.py___jb_old___
-tests
-*token*
-*credential*
+
+========== attachments ==========
+attachments/*
+!attachments/file_name.png
+
+========== tests ==========
+tests/*
+!tests/files_for_test.py
+
+========== secrets ==========
+secrets/*
+.env
+!secrets/secret_file.json
+
+========== logs ==========
 *.log
-*.env*
+log.*
