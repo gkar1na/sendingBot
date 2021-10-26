@@ -21,7 +21,7 @@ errors = {
 
 # Подключение логов
 logging.basicConfig(
-    filename='bot.log',
+    # filename='bot.log',
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
@@ -69,13 +69,15 @@ while True:
 
     # Попытка запустить прослушку
     try:
-        print('bot start')
+        logger.info('Бот запущен')
+
         # Запуск прослушки
         for event in longpoll.listen():
 
             # Если пришло новое сообщение сообществу:
             if event.type == VkEventType.MESSAGE_NEW and event.to_me and event.from_user:
-                print(event.text)
+                logger.info(f'Получено сообщение от chat_id="{event.user_id}": "{event.text}"')
+
                 # Подключение к БД
                 session = get_session(engine)
 
@@ -94,7 +96,7 @@ while True:
                         admin=False,
                         date=datetime.now()
                     ))
-                    print('new_user')
+                    logger.info(f'Добавлен пользователь: chat_id="{event.user_id}", link=vk.com/{user_info["domain"]}')
 
                     text_welcome = session.query(Text).filter_by(title=title_welcome).first()
                     if text_welcome:
@@ -136,13 +138,14 @@ while True:
                     # Задержка от спама
                     time.sleep(config.delay)
 
-                    print('ignore')
+                    # print('ignore')
                     continue
 
                 # Разделение текста сообщения на команду
                 words = list(map(str, event.text.split()))
                 command = words[0][1:].lower()
-                print(f'command: {command}')
+                logger.info(f'user_id="{event.user_id}" вызвал команду "{command}"')
+                # print(f'command: {command}')
 
                 # Если ввели несуществующую команду:
                 if not session.query(Command).filter_by(name=command).first():
@@ -167,7 +170,7 @@ while True:
 
                     # Разделение текста сообщения на аргументы команды, если они введены
                     args = re.findall('/(.*?)/', event.text, re.DOTALL)
-                    print(args)
+
                     # Обработчик команд:
                     response = 0
 
