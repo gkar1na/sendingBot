@@ -133,7 +133,51 @@ def update_attachment(event: Event, args: List[str]) -> int:
     return 0
 
 
+# args = [{text.title}, {step.number} | {step.name}]
 def update_text_step(event: Event, args: List[str]) -> int:
+    if len(args) < 2 or not args[0] or not args[1]:
+        return 1
+
+    params = {'title': args[0]}
+
+    # Подключение к БД
+    session = get_session(engine)
+
+    text = session.query(Text).filter_by(**params).first()
+
+    if not text:
+        # Завершение работы в БД
+        session.close()
+
+        return 2
+
+    if args[1].isdigit():
+        steps = {step.number for step in session.query(Step)}
+
+        if int(args[1]) not in steps:
+            # Завершение работы в БД
+            session.close()
+
+            return 4
+
+        params['step'] = int(args[1])
+
+    elif args[1]:
+        step_names = {step.name for step in session.query(Step)}
+
+        if args[1] not in step_names:
+            # Завершение работы в БД
+            session.close()
+
+            return 4
+
+        params['step'] = session.query(Step.number).filter_by(name=args[1]).first().number
+
+    text.step = params['step']
+
+    # Завершение работы в БД
+    session.commit()
+    session.close()
 
     return 0
 
