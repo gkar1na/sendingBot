@@ -52,7 +52,7 @@ def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None,
 
             message = f'Пользователю vk.com/{domain} ({ID})' \
                       f'не отправилось сообщение "{message}"\n' \
-                f'По причине: "{e}"'
+                      f'По причине: "{e}"'
             vk.messages.send(
                 user_id=settings.MY_VK_ID,
                 message=message,
