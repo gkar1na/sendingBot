@@ -201,6 +201,10 @@ while True:
                     elif command == 'update_user_step':
                         response = commandHandler.update_user_step(event, args)
 
+                    # get_commands
+                    elif command == 'get_commands':
+                        response = commandHandler.get_commands(event, args)
+
                     if response:
 
                         # Отправить уведомление о некорректном завершении работы команды

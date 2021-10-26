@@ -5,11 +5,11 @@ from vk_api.longpoll import VkLongPoll, VkEventType
 import vk_api
 from typing import List
 from datetime import datetime
+import json
 
-from database import get_session, engine, Text, User, Step
+from database import get_session, engine, Text, User, Step, Command
 from config import date_format, TOKEN
 import sending as send
-
 
 # Подключение к сообществу
 vk_session = vk_api.VkApi(token=TOKEN)
@@ -52,8 +52,10 @@ def send_message(event: Event, args: List[str]) -> int:
     session = get_session(engine)
 
     params = {'title': args[0]}
-    if len(args) > 1 and args[1].isdigit(): params['step'] = int(args[1])
-    elif len(args) > 1 and args[1]: params['step'] = session.query(Step.number).filter_by(name=args[1]).first().number
+    if len(args) > 1 and args[1].isdigit():
+        params['step'] = int(args[1])
+    elif len(args) > 1 and args[1]:
+        params['step'] = session.query(Step.number).filter_by(name=args[1]).first().number
 
     text = session.query(Text).filter_by(**params).first()
 
@@ -223,6 +225,51 @@ def update_user_step(event: Event, args: List[str]) -> int:
         params['step'] = session.query(Step.number).filter_by(name=args[1]).first().number
 
     user.step = params['step']
+
+    # Завершение работы в БД
+    session.commit()
+    session.close()
+
+    return 0
+
+
+# args = []
+def get_commands(event: Event, args: List[str]) -> int:
+    # Подключение к БД
+    session = get_session(engine)
+
+    admin = session.query(User).filter_by(chat_id=event.user_id).first().admin
+
+    if admin:
+        params = {}
+    else:
+        params = {'admin': False}
+
+    commands = [
+        {
+            'name': command.name,
+            'arguments': json.loads(command.arguments)
+        } for command in session.query(Command).filter_by(**params)
+    ]
+
+    commands = sorted(commands, key=lambda i: i['name'])
+
+    if not commands:
+        message_text = 'У вас нет доступных команд.'
+
+    else:
+        message_text = 'Найдены следующие доступные команды:\n'
+        for command in commands:
+            message_text += f'\n!{command["name"]}'
+            for arg in command['arguments']:
+                message_text += f' /{arg}/'
+            # message_text += '\n'
+
+    send.message(
+        vk=vk,
+        ID=event.user_id,
+        message=message_text
+    )
 
     # Завершение работы в БД
     session.commit()
