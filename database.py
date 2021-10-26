@@ -71,8 +71,8 @@ def create_tables(engine: Engine) -> None:
     # session.add(Command(name='update_user_step', admin=True, arguments=json.dumps(['домен', 'новый шаг'])))
     # session.add(Command(name='get_commands', admin=False, arguments=json.dumps([])))
     # session.add(Command(name='update_user_admin', admin=True, arguments=json.dumps(['домен', 'новое значение доступа'])))
+    # session.add(Command(name='check', admin=True, arguments=json.dumps([])))
 
-    # session.add(Command(name='update_text', admin=True))
     # session.add(Command(name='update_text', admin=True))
     # session.add(Command(name='update_text', admin=True))
     # session.add(Command(name='update_text', admin=True))

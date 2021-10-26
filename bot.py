@@ -214,6 +214,10 @@ while True:
                     elif command == 'update_user_admin':
                         response = commandHandler.update_user_admin(event, args)
 
+                    # check
+                    elif command == 'check':
+                        response = commandHandler.check(event, args)
+
                     if response:
 
                         # Отправить уведомление о некорректном завершении работы команды

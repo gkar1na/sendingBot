@@ -315,3 +315,33 @@ def update_user_admin(event: Event, args: List[str]) -> int:
     session.close()
 
     return 0
+
+
+# args = []
+def check(event: Event, args: List[str]) -> int:
+    # Подключение к БД
+    session = get_session(engine)
+
+    users = session.query(User)
+    texts = session.query(Text)
+
+    for user in users:
+        user_texts = set(json.loads(user.texts))
+
+        for text in texts:
+            if text.text_id not in user_texts:
+                send.message(
+                    vk=vk,
+                    ID=user.chat_id,
+                    message=text.text,
+                    attachment=text.attachment
+                )
+                user_texts.add(text.text_id)
+
+        user.texts = json.dumps(list(user_texts))
+
+    # Завершение работы в БД
+    session.commit()
+    session.close()
+
+    return 0
