@@ -120,4 +120,4 @@ def delete_tables():
 if __name__ == "__main__":
     create_tables(engine)
     add_default()
-    print('========== DB CREATIN
+    print('========== DB CREATING - OK ==========')

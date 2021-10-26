@@ -46,7 +46,7 @@ def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None,
     except Exception as e:
         session = get_session(engine)
         user = session.query(User).filter_by(chat_id=ID).first()
-        print(e)
+
         if user:
             domain = session.query(User).filter_by(chat_id=ID).first().domain
 
@@ -57,4 +57,4 @@ def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None,
                 user_id=settings.MY_VK_ID,
                 message=message,
                 random_id=get_random_id()
-        
+            )
