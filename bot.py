@@ -218,6 +218,10 @@ while True:
                     elif command == 'check':
                         response = commandHandler.check(event, args)
 
+                    # get_texts
+                    elif command == 'get_texts':
+                        response = commandHandler.get_texts(event, args)
+
                     if response:
 
                         # Отправить уведомление о некорректном завершении работы команды

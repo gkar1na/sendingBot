@@ -345,3 +345,44 @@ def check(event: Event, args: List[str]) -> int:
     session.close()
 
     return 0
+
+
+# args = []
+def get_texts(event: Event, args: List[str]) -> int:
+    # Подключение к БД
+    session = get_session(engine)
+
+    texts = [
+        {
+            'title': text.title,
+            'step': text.step,
+            'attachment': text.attachment,
+            'text': text.text
+        } for text in session.query(Text)
+    ]
+
+    texts = sorted(texts, key=lambda i: i['title'])
+
+    if not texts:
+        message_text = 'Список текстов пуст.'
+
+    else:
+        message_text = 'Сейчас имеются такие тексты:'
+        for text in texts:
+            message_text += f'\n---{text["title"]}---\n' \
+                            f'Шаг: {text["step"]}\n' \
+                            f'Вложение: {text["attachment"]}\n' \
+                            f'Текст:\n' \
+                            f'{text["text"]}\n'
+
+    send.message(
+        vk=vk,
+        ID=event.user_id,
+        message=message_text
+    )
+
+    # Завершение работы в БД
+    session.commit()
+    session.close()
+
+    return 0
