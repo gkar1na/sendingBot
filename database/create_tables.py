@@ -22,6 +22,13 @@ class Step(db):
     date = Column(DateTime)
 
 
+# Таблица с вложениями
+class Attachment(db):
+    __tablename__ = 'attachment'
+
+    name = Column(String, primary_key=True)
+
+
 # Таблица пользователей
 class User(db):
     __tablename__ = 'vk_user'
@@ -44,7 +51,7 @@ class Text(db):
     step = Column(Integer, ForeignKey('step.number', onupdate='cascade', ondelete='cascade'))
     title = Column(String, unique=True)
     text = Column(String)
-    attachment = Column(String)
+    attachment = Column(String, ForeignKey('attachment.name', onupdate='cascade', ondelete='cascade'))
     date = Column(DateTime)
 
 

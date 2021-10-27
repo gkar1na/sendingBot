@@ -5,7 +5,7 @@ from datetime import datetime
 import json
 
 from config import settings
-from database.create_tables import get_session, engine, Text, User, Step, Command
+from database.create_tables import get_session, engine, Text, User, Step, Command, Attachment
 from app import sending as send
 import loadAttachment
 
@@ -129,7 +129,15 @@ def update_attachment(event: Event, args: List[str]) -> int:
 
         return 2
 
-    text.attachment = args[1]
+    attach_params = {'name': args[1]}
+
+    if not session.query(Attachment).filter_by(**attach_params).first():
+        # Завершение работы в БД
+        session.close()
+
+        return 8
+
+    text.attachment = attach_params['name']
 
     # Завершение работы в БД
     session.commit()
@@ -406,6 +414,64 @@ def get_users(event: Event, args: List[str]) -> int:
         ID=event.user_id,
         message=message_text
     )
+
+    # Завершение работы в БД
+    session.commit()
+    session.close()
+
+    return 0
+
+
+# args = []
+def load(event: Event, args: List[str]):
+    if not event.attachments:
+        return 7
+
+    # Подключение к БД
+    session = get_session(engine)
+
+    attachments = vk.messages.getById(message_ids=[event.message_id])['items'][0]['attachments']
+
+    for attachment in attachments:
+        params = {}
+        attach_type = attachment['type']
+        if attach_type in {'photo', 'video'}:
+            attach_owner_id = attachment[attach_type]['owner_id']
+            attach_id = attachment[attach_type]['id']
+            attach_access_key = attachment[attach_type]['access_key']
+
+            params = {'name': f'{attach_type}{attach_owner_id}_{attach_id}_{attach_access_key}'}
+
+        elif attach_type == 'wall':
+            attach_from_id = attachment[attach_type]['from_id']
+            attach_id = attachment[attach_type]['id']
+
+            params = {'name': f'{attach_type}{attach_from_id}_{attach_id}'}
+
+        elif attach_type == 'audio':
+            attach_owner_id = attachment[attach_type]['owner_id']
+            attach_id = attachment[attach_type]['id']
+
+            params = {'name': f'{attach_type}{attach_owner_id}_{attach_id}'}
+
+        if session.query(Attachment).filter_by(**params).first():
+            send.message(
+                vk=vk,
+                ID=event.user_id,
+                message=f'{params["name"]}',
+                attachment=params['name']
+            )
+
+            continue
+
+        session.add(Attachment(**params))
+
+        send.message(
+            vk=vk,
+            ID=event.user_id,
+            message=params['name'],
+            attachment=params['name']
+        )
 
     # Завершение работы в БД
     session.commit()

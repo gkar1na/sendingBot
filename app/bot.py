@@ -19,7 +19,9 @@ errors = {
     3: 'Такой текст уже существует.',
     4: 'Такого шага не существует.',
     5: 'Такого пользователя не существует.',
-    6: 'Существуют только значения "True" и "False" (регистр не важен)'
+    6: 'Существуют только значения "True" и "False" (регистр не важен)',
+    7: 'Вложение не прикрепленно.',
+    8: 'Такого вложения не существует.'
 }
 
 
@@ -222,6 +224,10 @@ while True:
                     # get_users
                     elif command == 'get_users':
                         response = commandHandler.get_users(event, args)
+
+                    # load
+                    elif command == 'load':
+                        response = commandHandler.load(event, args)
 
                     if response:
 
