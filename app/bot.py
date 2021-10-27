@@ -146,14 +146,12 @@ while True:
                     # Задержка от спама
                     time.sleep(settings.DELAY)
 
-                    # print('ignore')
                     continue
 
                 # Разделение текста сообщения на команду
                 words = list(map(str, event.text.split()))
                 command = words[0][1:].lower()
                 logger.info(f'user_id="{event.user_id}" вызвал команду "{command}"')
-                # print(f'command: {command}')
 
                 # Если ввели несуществующую команду:
                 if not session.query(Command).filter_by(name=command).first():
@@ -274,4 +272,4 @@ while True:
 
     # Запись в консоль об ошибке с подключением
     except Exception as e:
-        print(f'{datetime.now()} - "{e}"')
+        logger.error(e)
