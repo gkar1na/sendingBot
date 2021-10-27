@@ -1,16 +1,16 @@
-import sending, config
-
 from vk_api.longpoll import VkLongPoll, VkEventType
 import vk_api
-import json
-import logging
 import time
 from datetime import datetime
+import json
+import logging
 import re
 
-from database.create_tables import engine, get_session, User, Text, Command
-import commandHandler
 from config import settings
+from database.create_tables import engine, get_session, User, Text, Command
+import sending
+import commandHandler
+
 
 errors = {
     -1: 'Неизвестная ошибка.',
@@ -25,12 +25,10 @@ errors = {
 
 # Подключение логов
 logging.basicConfig(
-    # filename='bot.log',
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
-
 
 # Подключение к сообществу
 vk_session = vk_api.VkApi(token=settings.VK_BOT_TOKEN)

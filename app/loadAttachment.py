@@ -1,5 +1,6 @@
+from vk_api.longpoll import Event, VkLongPoll
 import vk_api
-from vk_api.longpoll import VkLongPoll
+
 from config import settings
 
 

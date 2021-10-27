@@ -1,10 +1,10 @@
-import vk_api
 from vk_api.utils import get_random_id
 from vk_api.keyboard import VkKeyboard
+import vk_api
 import time
 
-from database.create_tables import get_session, engine, User
 from config import settings
+from database.create_tables import get_session, engine, User
 
 
 def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None, attachment=None) -> None:
