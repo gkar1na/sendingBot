@@ -4,7 +4,7 @@ import vk_api
 import time
 
 from config import settings
-from database.create_tables import get_session, engine, User
+from create_tables import get_session, engine, User
 
 
 def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None, attachment=None) -> None:

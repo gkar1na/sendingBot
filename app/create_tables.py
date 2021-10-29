@@ -40,6 +40,7 @@ class User(db):
     step = Column(Integer, ForeignKey('step.number', onupdate='cascade', ondelete='cascade'))
     texts = Column(String)
     admin = Column(Boolean)
+    lectures = Column(String)
     date = Column(DateTime)
 
 
@@ -127,4 +128,3 @@ def delete_tables():
 if __name__ == "__main__":
     create_tables(engine)
     add_default()
-    print('========== DB CREATING - OK ==========')

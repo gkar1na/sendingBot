@@ -1,14 +1,12 @@
 from vk_api.longpoll import Event, VkLongPoll
 import vk_api
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 import json
 
 from config import settings
-from database.create_tables import get_session, engine, Text, User, Step, Command, Attachment
-from app import sending as send
-import loadAttachment
-
+from create_tables import get_session, engine, Text, User, Step, Command, Attachment
+import sending as send
 
 # Подключение к сообществу
 vk_session = vk_api.VkApi(token=settings.VK_BOT_TOKEN)
@@ -17,7 +15,7 @@ vk = vk_session.get_api()
 
 
 # args = [text.title]
-def new_title(event: Event, args: List[str]) -> int:
+def new_title(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     if not args or not args[0]:
         return 1
 
@@ -43,7 +41,7 @@ def new_title(event: Event, args: List[str]) -> int:
 
 
 # args = [text.title, None | step.name | step.numbed]
-def send_message(event: Event, args: List[str]) -> int:
+def send_message(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     if not args or not args[0]:
         return 1
 
@@ -85,7 +83,7 @@ def send_message(event: Event, args: List[str]) -> int:
 
 
 # args = [{text.title}, {text.text}]
-def update_text(event: Event, args: List[str]) -> int:
+def update_text(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     if len(args) < 2 or not args[0] or not args[1]:
         return 1
 
@@ -112,7 +110,7 @@ def update_text(event: Event, args: List[str]) -> int:
 
 
 # args = [{text.title}, {text.attachment}]
-def update_attachment(event: Event, args: List[str]) -> int:
+def update_attachment(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     if len(args) < 2 or not args[0] or not args[1]:
         return 1
 
@@ -147,7 +145,7 @@ def update_attachment(event: Event, args: List[str]) -> int:
 
 
 # args = [{text.title}, {step.number} | {step.name}]
-def update_text_step(event: Event, args: List[str]) -> int:
+def update_text_step(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     if len(args) < 2 or not args[0] or not args[1]:
         return 1
 
@@ -196,7 +194,7 @@ def update_text_step(event: Event, args: List[str]) -> int:
 
 
 # args = [{user.domain}, {step.number} | {step.name}]
-def update_user_step(event: Event, args: List[str]) -> int:
+def update_user_step(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     if len(args) < 2 or not args[0] or not args[1]:
         return 1
 
@@ -245,7 +243,7 @@ def update_user_step(event: Event, args: List[str]) -> int:
 
 
 # args = []
-def get_commands(event: Event, args: List[str]) -> int:
+def get_commands(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     # Подключение к БД
     session = get_session(engine)
 
@@ -290,7 +288,7 @@ def get_commands(event: Event, args: List[str]) -> int:
 
 
 # args = [{user.domain}, {user.admin]
-def update_user_admin(event: Event, args: List[str]) -> int:
+def update_user_admin(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     if len(args) < 2 or not args[0] or not args[1]:
         return 1
 
@@ -325,7 +323,7 @@ def update_user_admin(event: Event, args: List[str]) -> int:
 
 
 # args = []
-def check(event: Event, args: List[str]) -> int:
+def check(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     # Подключение к БД
     session = get_session(engine)
 
@@ -355,7 +353,7 @@ def check(event: Event, args: List[str]) -> int:
 
 
 # args = []
-def get_texts(event: Event, args: List[str]) -> int:
+def get_texts(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     # Подключение к БД
     session = get_session(engine)
 
@@ -396,7 +394,7 @@ def get_texts(event: Event, args: List[str]) -> int:
 
 
 # args = []
-def get_users(event: Event, args: List[str]) -> int:
+def get_users(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     # Подключение к БД
     session = get_session(engine)
 
@@ -423,7 +421,7 @@ def get_users(event: Event, args: List[str]) -> int:
 
 
 # args = []
-def load(event: Event, args: List[str]):
+def load(event: Optional[Event] = None, args: Optional[List[str]] = None):
     if not event.attachments:
         return 7
 
