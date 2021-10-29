@@ -83,6 +83,12 @@ def start(vk):
                             attachment=text.attachment
                         )
 
+                        texts = json.loads(user.texts)
+                        texts.append(text.text_id)
+                        user.texts = json.dumps(texts)
+
+                        user.step = text.step
+
                         send.message(
                             vk=vk,
                             ID=settings.MY_VK_ID,

@@ -334,14 +334,17 @@ def check(event: Optional[Event] = None, args: Optional[List[str]] = None) -> in
         user_texts = set(json.loads(user.texts))
 
         for text in texts:
-            if text.text_id not in user_texts:
+            if text.text_id not in user_texts and text.step and text.step <= user.step:
                 send.message(
                     vk=vk,
                     ID=user.chat_id,
                     message=text.text,
                     attachment=text.attachment
                 )
-                user_texts.add(text.text_id)
+
+                texts = json.loads(user.texts)
+                texts.append(text.text_id)
+                user.texts = json.dumps(texts)
 
         user.texts = json.dumps(list(user_texts))
 
