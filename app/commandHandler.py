@@ -25,7 +25,7 @@ def new_title(event: Optional[Event] = None, args: Optional[List[str]] = None) -
     title = args[0]
 
     titles = {text.title for text in session.query(Text)}
-    if title in titles:
+    if title not in titles:
         # Завершение работы в БД
         session.close()
 
