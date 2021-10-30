@@ -181,7 +181,7 @@ def start():
                         )
 
                         # Разделение текста сообщения на аргументы команды, если они введены
-                        args = re.findall('/(.*?)/', event.text, re.DOTALL)
+                        args = re.findall('&lt;(.*?)&gt;', event.text, re.DOTALL)
 
                         # Обработчик команд:
                         response = -1
