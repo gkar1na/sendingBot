@@ -25,7 +25,7 @@ def new_title(event: Optional[Event] = None, args: Optional[List[str]] = None) -
     title = args[0]
 
     titles = {text.title for text in session.query(Text)}
-    if title not in titles:
+    if title in titles:
         # Завершение работы в БД
         session.close()
 
@@ -49,15 +49,18 @@ def send_message(event: Optional[Event] = None, args: Optional[List[str]] = None
     session = get_session(engine)
 
     params = {'title': args[0]}
-    if len(args) > 1 and args[1].isdigit():
-        params['step'] = int(args[1])
-    elif len(args) > 1 and args[1]:
-        params['step'] = session.query(Step.number).filter_by(name=args[1]).first().number
-
     text = session.query(Text).filter_by(**params).first()
 
     if text:
-        for user in session.query(User):
+        params = {}
+        if len(args) > 1 and args[1].isdigit():
+            params['step'] = int(args[1])
+        elif len(args) > 1 and args[1]:
+            params['step'] = session.query(Step).filter_by(name=args[1]).first().number
+        elif text.step.isdigit():
+            params['step'] = text.step
+
+        for user in session.query(User).filter_by(**params):
             texts = json.loads(user.texts)
             if text.text_id not in texts:
                 send.message(
