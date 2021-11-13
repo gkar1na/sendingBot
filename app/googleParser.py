@@ -29,77 +29,82 @@ def make_domain(link: str) -> str:
 
 
 def start(vk):
-    # Подключение логов
-    logging.basicConfig(
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        level=logging.INFO
-    )
-    logger = logging.getLogger('parser')
-
-    session = get_session(engine)
-
-    logger.info('Парсер запущен')
-
     while True:
-        data = get_rowData(
-            spreadsheet_id=settings.GOOGLE_TABLE_PATH,
-            ranges='A:AC'
+        # Подключение логов
+        logging.basicConfig(
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            level=logging.INFO
         )
+        logger = logging.getLogger('parser')
+        session = get_session(engine)
+        try:
+            logger.info('Парсер запущен')
 
-        titles = data.pop(0)
+            while True:
+                data = get_rowData(
+                    spreadsheet_id=settings.GOOGLE_TABLE_PATH,
+                    ranges='A:AC'
+                )
 
-        column_domain = 0
-        column_lectures = 0
-        for i, title in enumerate(titles):
-            if title == 'Ссылка на ВК':
-                column_domain = i
-            elif title == 'Какие из лекций по выбору планируешь посетить?':
-                column_lectures = i
+                titles = data.pop(0)
 
-        people = []
-        for i, person in enumerate(data):
-            new_person = {}
-            for j, value in enumerate(person):
-                if j == column_domain:
-                    new_person['domain'] = make_domain(data[i][j])
-                elif j == column_lectures:
-                    new_person['lectures'] = list(map(str, data[i][j].split(', ')))
-            people.append(new_person)
+                column_domain = 0
+                column_lectures = 0
+                for i, title in enumerate(titles):
+                    if title == 'Ссылка на ВК':
+                        column_domain = i
+                    elif title == 'Какие из лекций по выбору планируешь посетить?':
+                        column_lectures = i
 
-        text = session.query(Text).filter_by(title='зарегистрировался').first()
-        if text:
-            for person in people:
-                user = session.query(User).filter_by(domain=person['domain']).first()
-                if user:
-                    if user.lectures == '[]':
+                people = []
+                for i, person in enumerate(data):
+                    new_person = {}
+                    for j, value in enumerate(person):
+                        if j == column_domain:
+                            new_person['domain'] = make_domain(data[i][j])
+                        elif j == column_lectures:
+                            new_person['lectures'] = list(map(str, data[i][j].split(', ')))
+                    people.append(new_person)
 
-                        user.lectures = json.dumps(person['lectures'])
-                        session.commit()
+                text = session.query(Text).filter_by(title='зарегистрировался').first()
+                if text:
+                    for person in people:
+                        user = session.query(User).filter_by(domain=person['domain']).first()
+                        if user:
+                            if user.lectures == '[]':
 
-                        send.message(
-                            vk=vk,
-                            ID=user.chat_id,
-                            message=text.text,
-                            attachment=text.attachment
-                        )
+                                user.lectures = json.dumps(person['lectures'])
+                                session.commit()
 
-                        texts = json.loads(user.texts)
-                        texts.append(text.text_id)
-                        user.texts = json.dumps(texts)
+                                send.message(
+                                    vk=vk,
+                                    ID=user.chat_id,
+                                    message=text.text,
+                                    attachment=text.attachment
+                                )
 
-                        user.step = text.step
+                                user.step = 2
 
-                        send.message(
-                            vk=vk,
-                            ID=settings.MY_VK_ID,
-                            message=f'Пользователь vk.com/{person["domain"]} зарегистрировался.'
-                        )
+                                texts = json.loads(user.texts)
+                                texts.append(text.text_id)
+                                user.texts = json.dumps(texts)
 
-                        logger.info(f'Пользователь vk.com/{person["domain"]} зарегистрировался.')
+                                send.message(
+                                    vk=vk,
+                                    ID=settings.MY_VK_ID,
+                                    message=f'Пользователь vk.com/{person["domain"]} зарегистрировался.'
+                                )
 
-                        time.sleep(settings.DELAY)
+                                logger.info(f'Пользователь vk.com/{person["domain"]} зарегистрировался.')
 
-        time.sleep(60)
+                                time.sleep(settings.DELAY)
+
+                session.commit()
+                time.sleep(60)
+
+        except Exception as e:
+            session.close()
+            logger.error(e)
 
 
 if __name__ == '__main__':

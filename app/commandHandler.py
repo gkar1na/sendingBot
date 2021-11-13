@@ -62,6 +62,7 @@ def send_message(event: Optional[Event] = None, args: Optional[List[str]] = None
 
         for user in session.query(User).filter_by(**params):
             texts = json.loads(user.texts)
+
             if text.text_id not in texts:
                 send.message(
                     vk=vk,
@@ -380,11 +381,7 @@ def get_texts(event: Optional[Event] = None, args: Optional[List[str]] = None) -
     else:
         message_text = 'Сейчас имеются такие тексты:'
         for text in texts:
-            message_text += f'\n---{text["title"]}---\n' \
-                            f'Шаг: {text["step"]}\n' \
-                            f'Вложение: {text["attachment"]}\n' \
-                            f'Текст:\n' \
-                            f'{text["text"]}\n'
+            message_text += f'\n---{text["title"]}---'
 
     send.message(
         vk=vk,
@@ -439,7 +436,7 @@ def load(event: Optional[Event] = None, args: Optional[List[str]] = None):
     for attachment in attachments:
         params = {}
         attach_type = attachment['type']
-        if attach_type in {'photo', 'video'}:
+        if attach_type in {'photo', 'video', 'doc'}:
             attach_owner_id = attachment[attach_type]['owner_id']
             attach_id = attachment[attach_type]['id']
             attach_access_key = attachment[attach_type]['access_key']
