@@ -359,8 +359,17 @@ def check(event: Optional[Event] = None, args: Optional[List[str]] = None) -> in
     return 0
 
 
-# args = []
+# args = [quantity]
 def get_texts(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
+
+    params = {}
+
+    if args:
+        if args[0].isdigit():
+            params['quantity'] = int(args[0])
+        else:
+            return 9
+
     # Подключение к БД
     session = get_session(engine)
 
@@ -369,25 +378,38 @@ def get_texts(event: Optional[Event] = None, args: Optional[List[str]] = None) -
             'title': text.title,
             'step': text.step,
             'attachment': text.attachment,
-            'text': text.text
-        } for text in session.query(Text)
+            'text': text.text,
+            'date': text.date
+        } for text in session.query(Text).filter(Text.date!=None)
     ]
 
+    if params and params['quantity'] < len(texts):
+        texts = sorted(texts, key=lambda i: i['date'], reverse=True)[:params['quantity']]
+
     texts = sorted(texts, key=lambda i: i['title'])
+
+    message_texts = []
 
     if not texts:
         message_text = 'Список текстов пуст.'
 
     else:
-        message_text = 'Сейчас имеются такие тексты:'
-        for text in texts:
-            message_text += f'\n---{text["title"]}---'
+        message_text = ''
+        steps = {step.number: step.name for step in session.query(Step)}
+        for i, text in enumerate(texts):
+            if i and i % 50 == 0:
+                message_texts.append(message_text)
+                message_text = ''
+            step = 'без шага' if text["step"] not in steps.keys() else f'{steps[text["step"]]} - {text["step"]}'
+            message_text += f'{i + 1}) "{text["title"]}" ({step})\n'
 
-    send.message(
-        vk=vk,
-        ID=event.user_id,
-        message=message_text
-    )
+    message_texts.append(message_text)
+    for message_text in message_texts:
+        send.message(
+            vk=vk,
+            ID=event.user_id,
+            message=message_text
+        )
 
     # Завершение работы в БД
     session.commit()
