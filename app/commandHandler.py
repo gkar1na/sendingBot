@@ -388,6 +388,8 @@ def get_texts(event: Optional[Event] = None, args: Optional[List[str]] = None) -
 
     texts = sorted(texts, key=lambda i: i['title'])
 
+    message_texts = []
+
     if not texts:
         message_text = 'Список текстов пуст.'
 
@@ -395,14 +397,19 @@ def get_texts(event: Optional[Event] = None, args: Optional[List[str]] = None) -
         message_text = ''
         steps = {step.number: step.name for step in session.query(Step)}
         for i, text in enumerate(texts):
+            if i and i % 50 == 0:
+                message_texts.append(message_text)
+                message_text = ''
             step = 'без шага' if text["step"] not in steps.keys() else f'{steps[text["step"]]} - {text["step"]}'
             message_text += f'{i + 1}) "{text["title"]}" ({step})\n'
 
-    send.message(
-        vk=vk,
-        ID=event.user_id,
-        message=message_text
-    )
+    message_texts.append(message_text)
+    for message_text in message_texts:
+        send.message(
+            vk=vk,
+            ID=event.user_id,
+            message=message_text
+        )
 
     # Завершение работы в БД
     session.commit()
