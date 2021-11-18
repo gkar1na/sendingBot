@@ -392,9 +392,11 @@ def get_texts(event: Optional[Event] = None, args: Optional[List[str]] = None) -
         message_text = 'Список текстов пуст.'
 
     else:
-        message_text = 'Сейчас имеются такие тексты:'
-        for text in texts:
-            message_text += f'\n---{text["title"]}---'
+        message_text = ''
+        steps = {step.number: step.name for step in session.query(Step)}
+        for i, text in enumerate(texts):
+            step = 'без шага' if text["step"] not in steps.keys() else f'{steps[text["step"]]} - {text["step"]}'
+            message_text += f'{i + 1}) "{text["title"]}" ({step})\n'
 
     send.message(
         vk=vk,
