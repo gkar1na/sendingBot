@@ -3,6 +3,7 @@ import vk_api
 from typing import List, Optional
 from datetime import datetime
 import json
+from sqlalchemy import desc, asc
 
 from config import settings
 from create_tables import get_session, engine, Text, User, Step, Command, Attachment
@@ -418,25 +419,54 @@ def get_texts(event: Optional[Event] = None, args: Optional[List[str]] = None) -
     return 0
 
 
-# args = []
+# args = [quantity]
 def get_users(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
+
+    params = {}
+
+    if args:
+        if args[0].isdigit():
+            params['quantity'] = int(args[0])
+        else:
+            return 9
+
     # Подключение к БД
     session = get_session(engine)
 
-    users = session.query(User)
+    users = session.query(User).filter(User.chat_id != event.user_id)
 
-    message_text = f'Сейчас есть информация о {users.count() - 1} пользователях:\n'
-    number = 1
-    for user in users:
-        if user.chat_id != event.user_id:
-            message_text += f'\n{number}) vk.com/{user.domain} - {user.first_name} {user.last_name}'
-            number += 1
+    if params and params['quantity'] < users.count():
+        users = users.order_by(desc(User.date)).limit(params['quantity'])
 
-    send.message(
-        vk=vk,
-        ID=event.user_id,
-        message=message_text
-    )
+    message_texts = []
+
+    if not users.count():
+        message_text = f'Пользователей в базе нет.'
+
+    else:
+        message_text = f'Сейчас есть информация о {users.count()} пользователях:\n\n'
+        steps = {step.number: step.name for step in session.query(Step)}
+        titles = {text.text_id: text.title for text in session.query(Text)}
+        for i, user in enumerate(users):
+            if i and i % 50 == 0:
+                message_texts.append(message_text)
+                message_text = ''
+            step = 'без шага' if user.step not in steps.keys() else f'{steps[user.step]} - {user.step}'
+            message_text += f'{i + 1}) {user.first_name} {user.last_name} - vk.com/{user.domain}\n- Шаг - {step}\n'
+            texts = json.loads(user.texts)
+            if not texts:
+                message_text += '- Нет полученных текстов.\n\n'
+            else:
+                message_text += '- Полученные тексты - '
+                message_text += '; '.join(sorted({f'"{titles[text]}"' for text in texts})) + '\n\n'
+
+    message_texts.append(message_text)
+    for message_text in message_texts:
+        send.message(
+            vk=vk,
+            ID=event.user_id,
+            message=message_text
+        )
 
     # Завершение работы в БД
     session.commit()
