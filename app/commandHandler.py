@@ -359,8 +359,17 @@ def check(event: Optional[Event] = None, args: Optional[List[str]] = None) -> in
     return 0
 
 
-# args = []
+# args = [quantity]
 def get_texts(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
+
+    params = {}
+
+    if args:
+        if args[0].isdigit():
+            params['quantity'] = int(args[0])
+        else:
+            return 9
+
     # Подключение к БД
     session = get_session(engine)
 
@@ -369,9 +378,13 @@ def get_texts(event: Optional[Event] = None, args: Optional[List[str]] = None) -
             'title': text.title,
             'step': text.step,
             'attachment': text.attachment,
-            'text': text.text
-        } for text in session.query(Text)
+            'text': text.text,
+            'date': text.date
+        } for text in session.query(Text).filter(Text.date!=None)
     ]
+
+    if params and params['quantity'] < len(texts):
+        texts = sorted(texts, key=lambda i: i['date'], reverse=True)[:params['quantity']]
 
     texts = sorted(texts, key=lambda i: i['title'])
 
