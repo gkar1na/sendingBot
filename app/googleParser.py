@@ -84,6 +84,7 @@ def start(vk):
                                 )
 
                                 user.step = 2
+                                session.commit()
 
                                 texts = json.loads(user.texts)
                                 texts.append(text.text_id)
@@ -96,6 +97,58 @@ def start(vk):
                                 )
 
                                 logger.info(f'Пользователь vk.com/{person["domain"]} зарегистрировался.')
+
+                                time.sleep(settings.DELAY)
+
+                session.commit()
+
+                data = get_rowData(
+                    spreadsheet_id=settings.GOOGLE_TABLE_PATH2,
+                    ranges='A:I'
+                )
+
+                titles = data.pop(0)
+
+                column_domain = 0
+                for i, title in enumerate(titles):
+                    if title == 'Ссылка на ВК':
+                        column_domain = i
+
+                people = []
+                for i, person in enumerate(data):
+                    new_person = {}
+                    for j, value in enumerate(person):
+                        if j == column_domain:
+                            new_person['domain'] = make_domain(data[i][j])
+                    people.append(new_person)
+
+                text = session.query(Text).filter_by(title='зарегистрировался на практику').first()
+                if text:
+                    for person in people:
+                        user = session.query(User).filter_by(domain=person['domain']).first()
+                        if user:
+                            if user.step == 2:
+                                send.message(
+                                    vk=vk,
+                                    ID=user.chat_id,
+                                    message=text.text,
+                                    attachment=text.attachment
+                                )
+
+                                user.step = 3
+                                session.commit()
+
+                                texts = json.loads(user.texts)
+                                texts.append(text.text_id)
+                                user.texts = json.dumps(texts)
+
+                                send.message(
+                                    vk=vk,
+                                    ID=settings.MY_VK_ID,
+                                    message=f'Пользователь vk.com/{person["domain"]} зарегистрировался на практику.'
+                                )
+
+                                logger.info(f'Пользователь vk.com/{person["domain"]} зарегистрировался на практику.')
 
                                 time.sleep(settings.DELAY)
 
