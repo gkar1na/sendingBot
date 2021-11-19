@@ -2,6 +2,7 @@ from __future__ import print_function
 import time
 import json
 import logging
+import re
 
 import sending as send
 from sheetsParser import get_rowData
@@ -10,20 +11,7 @@ from config import settings
 
 
 def make_domain(link: str) -> str:
-    if link.rfind('/') == -1:
-        if link.rfind('@') == -1:
-            index = -1
-        else:
-            index = link.rfind('@')
-    else:
-        index = link.rfind('/')
-
-    domain = link[index + 1:]
-
-    if domain.find(']') != -1:
-        domain = domain[:domain.find(']')] + domain[domain.find(']') + 1:]
-    if domain.find('[') != -1:
-        domain = domain[:domain.find(']')] + domain[domain.find(']') + 1:]
+    domain = re.sub(r'[@*]?|(.*vk.com/)','',link)
 
     return domain
 
