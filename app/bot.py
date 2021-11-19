@@ -236,6 +236,10 @@ def start():
                         elif command == 'load':
                             response = commandHandler.load(event, args)
 
+                        # copy_texts
+                        elif command == 'copy_text':
+                            response = commandHandler.copy_text(event, args)
+
                         if response:
 
                             # Отправить уведомление о некорректном завершении работы команды

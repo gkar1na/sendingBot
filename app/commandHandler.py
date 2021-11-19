@@ -3,6 +3,8 @@ import vk_api
 from typing import List, Optional
 from datetime import datetime
 import json
+from validate_email import validate_email
+from sheetsParser import Spreadsheet
 
 from config import settings
 from create_tables import get_session, engine, Text, User, Step, Command, Attachment
@@ -495,6 +497,77 @@ def load(event: Optional[Event] = None, args: Optional[List[str]] = None):
             message=params['name'],
             attachment=params['name']
         )
+
+    # Завершение работы в БД
+    session.commit()
+    session.close()
+
+    return 0
+
+
+# args = [email]
+def copy_text(event: Optional[Event] = None, args: Optional[List[str]] = None):
+
+    params = {}
+
+    if args:
+        if not validate_email(args[0]):
+            return 9
+        params['email'] = args[0]
+
+    # Подключение к БД
+    session = get_session(engine)
+
+    texts = session.query(Text)
+
+    spreadsheet = Spreadsheet()
+    spreadsheet.create(
+        title=f'Имеющиеся в БД тексты на {datetime.now()}',
+        sheet_title='Text'
+    )
+
+    if params:
+        spreadsheet.share_with_email_for_writing(params['email'])
+    else:
+        spreadsheet.share_with_anybody_for_writing()
+
+    spreadsheet.prepare_set_cells_format('F:F', {'numberFormat': {'type': 'DATE_TIME',
+                                                                  'pattern': '[hh]:[mm]:[ss].000'}})
+
+    cells_range = f'A:F'
+    spreadsheet.prepare_set_values(
+        cells_range=cells_range,
+        values=[['text_id'] + [text.text_id for text in texts],
+                ['step'] + [text.step for text in texts],
+                ['title'] + [text.title for text in texts],
+                ['text'] + [text.text for text in texts],
+                ['attachment'] + [text.attachment for text in texts],
+                ['date'] + [text.date.strftime("%d/%m/%Y %H:%M:%S") if text.date else None for text in texts]],
+        major_dimension='COLUMNS')
+    spreadsheet.run_prepared()
+
+    spreadsheet.prepare_set_cells_format('A:F', {'wrapStrategy': 'WRAP',
+                                                 'horizontalAlignment': 'CENTER',
+                                                 'verticalAlignment': 'MIDDLE'})
+    spreadsheet.prepare_set_cells_format('D:D', {'wrapStrategy': 'WRAP',
+                                                 'horizontalAlignment': 'LEFT',
+                                                 'verticalAlignment': 'MIDDLE'})
+    spreadsheet.prepare_set_columns_width(0, 1, 50)
+    spreadsheet.prepare_set_columns_width(2, 6, 150)
+    spreadsheet.prepare_set_column_width(3, 380)
+    spreadsheet.prepare_set_cells_format('F:F', {'wrapStrategy': 'WRAP',
+                                                 'horizontalAlignment': 'CENTER',
+                                                 'verticalAlignment': 'MIDDLE',
+                                                 'numberFormat': {'type': 'DATE_TIME',
+                                                                  'pattern': ''}})
+
+    spreadsheet.run_prepared()
+
+    send.message(
+        vk=vk,
+        ID=event.user_id,
+        message=spreadsheet.get_sheet_url()
+    )
 
     # Завершение работы в БД
     session.commit()
