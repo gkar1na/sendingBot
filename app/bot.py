@@ -244,6 +244,10 @@ def start():
                         elif command == 'copy_user':
                             response = commandHandler.copy_user(event, args)
 
+                        # copy_step
+                        elif command == 'copy_step':
+                            response = commandHandler.copy_step(event, args)
+
                         if response:
 
                             # Отправить уведомление о некорректном завершении работы команды
