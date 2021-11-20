@@ -574,3 +574,74 @@ def copy_text(event: Optional[Event] = None, args: Optional[List[str]] = None):
     session.close()
 
     return 0
+
+
+# args = [email]
+def copy_user(event: Optional[Event] = None, args: Optional[List[str]] = None):
+
+    params = {}
+
+    if args:
+        if not validate_email(args[0]):
+            return 9
+        params['email'] = args[0]
+
+    # Подключение к БД
+    session = get_session(engine)
+
+    users = session.query(User)
+
+    spreadsheet = Spreadsheet()
+    spreadsheet.create(
+        title=f'Имеющиеся в БД пользователи на {datetime.now()}',
+        sheet_title='User'
+    )
+
+    if params:
+        spreadsheet.share_with_email_for_writing(params['email'])
+    else:
+        spreadsheet.share_with_anybody_for_writing()
+
+    spreadsheet.prepare_set_cells_format('I:I', {'numberFormat': {'type': 'DATE_TIME',
+                                                                  'pattern': '[hh]:[mm]:[ss].000'}})
+
+    cells_range = f'A:I'
+    spreadsheet.prepare_set_values(
+        cells_range=cells_range,
+        values=[['chat_id'] + [user.chat_id for user in users],
+                ['domain'] + [user.domain for user in users],
+                ['first_name'] + [user.first_name for user in users],
+                ['last_name'] + [user.last_name for user in users],
+                ['step'] + [user.step for user in users],
+                ['texts'] + [user.texts for user in users],
+                ['admin'] + [user.admin for user in users],
+                ['lectures'] + [user.lectures for user in users],
+                ['date'] + [user.date.strftime("%d/%m/%Y %H:%M:%S") if user.date else None for user in users]],
+        major_dimension='COLUMNS')
+    spreadsheet.run_prepared()
+
+    spreadsheet.prepare_set_cells_format('A:I', {'wrapStrategy': 'WRAP',
+                                                 'horizontalAlignment': 'CENTER',
+                                                 'verticalAlignment': 'MIDDLE'})
+    spreadsheet.prepare_set_columns_width(0, 6, 100)
+    spreadsheet.prepare_set_column_width(7, 380)
+    spreadsheet.prepare_set_column_width(8, 150)
+    spreadsheet.prepare_set_cells_format('I:I', {'wrapStrategy': 'WRAP',
+                                                 'horizontalAlignment': 'CENTER',
+                                                 'verticalAlignment': 'MIDDLE',
+                                                 'numberFormat': {'type': 'DATE_TIME',
+                                                                  'pattern': ''}})
+
+    spreadsheet.run_prepared()
+
+    send.message(
+        vk=vk,
+        ID=event.user_id,
+        message=spreadsheet.get_sheet_url()
+    )
+
+    # Завершение работы в БД
+    session.commit()
+    session.close()
+
+    return 0

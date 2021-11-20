@@ -240,6 +240,10 @@ def start():
                         elif command == 'copy_text':
                             response = commandHandler.copy_text(event, args)
 
+                        # copy_users
+                        elif command == 'copy_user':
+                            response = commandHandler.copy_user(event, args)
+
                         if response:
 
                             # Отправить уведомление о некорректном завершении работы команды
