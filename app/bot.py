@@ -248,6 +248,10 @@ def start():
                         elif command == 'copy_step':
                             response = commandHandler.copy_step(event, args)
 
+                        # copy_attachment
+                        elif command == 'copy_attachment':
+                            response = commandHandler.copy_attachment(event, args)
+
                         if response:
 
                             # Отправить уведомление о некорректном завершении работы команды
