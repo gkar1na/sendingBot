@@ -505,35 +505,7 @@ def load(event: Optional[Event] = None, args: Optional[List[str]] = None):
     return 0
 
 
-# args = [email]
-def copy_text(event: Optional[Event] = None, args: Optional[List[str]] = None):
-
-    params = {}
-
-    if args:
-        if not validate_email(args[0]):
-            return 9
-        params['email'] = args[0]
-
-    # Подключение к БД
-    session = get_session(engine)
-
-    texts = session.query(Text)
-
-    spreadsheet = Spreadsheet()
-    spreadsheet.create(
-        title=f'Имеющиеся в БД тексты на {datetime.now()}',
-        sheet_title='Text'
-    )
-
-    if params:
-        spreadsheet.share_with_email_for_writing(params['email'])
-    else:
-        spreadsheet.share_with_anybody_for_writing()
-
-    spreadsheet.prepare_set_cells_format('F:F', {'numberFormat': {'type': 'DATE_TIME',
-                                                                  'pattern': '[hh]:[mm]:[ss].000'}})
-
+def update_sheet_text(spreadsheet: Spreadsheet, texts):
     cells_range = f'A:F'
     spreadsheet.prepare_set_values(
         cells_range=cells_range,
@@ -544,7 +516,6 @@ def copy_text(event: Optional[Event] = None, args: Optional[List[str]] = None):
                 ['attachment'] + [text.attachment for text in texts],
                 ['date'] + [text.date.strftime("%d/%m/%Y %H:%M:%S") if text.date else None for text in texts]],
         major_dimension='COLUMNS')
-    spreadsheet.run_prepared()
 
     spreadsheet.prepare_set_cells_format('A:F', {'wrapStrategy': 'WRAP',
                                                  'horizontalAlignment': 'CENTER',
@@ -563,6 +534,34 @@ def copy_text(event: Optional[Event] = None, args: Optional[List[str]] = None):
 
     spreadsheet.run_prepared()
 
+
+# args = [email]
+def copy_text(event: Optional[Event] = None, args: Optional[List[str]] = None):
+    # Подключение к БД
+    session = get_session(engine)
+
+    texts = session.query(Text)
+
+    params = {}
+
+    if args:
+        if not validate_email(args[0]):
+            return 9
+        params['email'] = args[0]
+
+    spreadsheet = Spreadsheet()
+    spreadsheet.create(
+        title=f'Имеющиеся в БД тексты на {datetime.now()}',
+        sheet_title='Text'
+    )
+
+    if params:
+        spreadsheet.share_with_email_for_writing(params['email'])
+    else:
+        spreadsheet.share_with_anybody_for_writing()
+
+    update_sheet_text(spreadsheet, texts, params)
+
     send.message(
         vk=vk,
         ID=event.user_id,
@@ -576,35 +575,7 @@ def copy_text(event: Optional[Event] = None, args: Optional[List[str]] = None):
     return 0
 
 
-# args = [email]
-def copy_user(event: Optional[Event] = None, args: Optional[List[str]] = None):
-
-    params = {}
-
-    if args:
-        if not validate_email(args[0]):
-            return 9
-        params['email'] = args[0]
-
-    # Подключение к БД
-    session = get_session(engine)
-
-    users = session.query(User)
-
-    spreadsheet = Spreadsheet()
-    spreadsheet.create(
-        title=f'Имеющиеся в БД пользователи на {datetime.now()}',
-        sheet_title='User'
-    )
-
-    if params:
-        spreadsheet.share_with_email_for_writing(params['email'])
-    else:
-        spreadsheet.share_with_anybody_for_writing()
-
-    spreadsheet.prepare_set_cells_format('I:I', {'numberFormat': {'type': 'DATE_TIME',
-                                                                  'pattern': '[hh]:[mm]:[ss].000'}})
-
+def update_sheet_user(spreadsheet: Spreadsheet, users):
     cells_range = f'A:I'
     spreadsheet.prepare_set_values(
         cells_range=cells_range,
@@ -618,7 +589,6 @@ def copy_user(event: Optional[Event] = None, args: Optional[List[str]] = None):
                 ['lectures'] + [user.lectures for user in users],
                 ['date'] + [user.date.strftime("%d/%m/%Y %H:%M:%S") if user.date else None for user in users]],
         major_dimension='COLUMNS')
-    spreadsheet.run_prepared()
 
     spreadsheet.prepare_set_cells_format('A:I', {'wrapStrategy': 'WRAP',
                                                  'horizontalAlignment': 'CENTER',
@@ -634,6 +604,35 @@ def copy_user(event: Optional[Event] = None, args: Optional[List[str]] = None):
 
     spreadsheet.run_prepared()
 
+
+# args = [email]
+def copy_user(event: Optional[Event] = None, args: Optional[List[str]] = None):
+
+    # Подключение к БД
+    session = get_session(engine)
+
+    users = session.query(User)
+
+    params = {}
+
+    if args:
+        if not validate_email(args[0]):
+            return 9
+        params['email'] = args[0]
+
+    spreadsheet = Spreadsheet()
+    spreadsheet.create(
+        title=f'Имеющиеся в БД пользователи на {datetime.now()}',
+        sheet_title='User'
+    )
+
+    if params:
+        spreadsheet.share_with_email_for_writing(params['email'])
+    else:
+        spreadsheet.share_with_anybody_for_writing()
+
+    update_sheet_user(spreadsheet, users)
+
     send.message(
         vk=vk,
         ID=event.user_id,
@@ -645,6 +644,30 @@ def copy_user(event: Optional[Event] = None, args: Optional[List[str]] = None):
     session.close()
 
     return 0
+
+
+def update_sheet_step(spreadsheet: Spreadsheet, steps):
+    cells_range = f'A:C'
+    spreadsheet.prepare_set_values(
+        cells_range=cells_range,
+        values=[['number'] + [step.number for step in steps],
+                ['name'] + [step.name for step in steps],
+                ['date'] + [step.date.strftime("%d/%m/%Y %H:%M:%S") if step.date else None for step in steps]],
+        major_dimension='COLUMNS')
+
+    spreadsheet.prepare_set_cells_format('A:C', {'wrapStrategy': 'WRAP',
+                                                 'horizontalAlignment': 'CENTER',
+                                                 'verticalAlignment': 'MIDDLE'})
+    spreadsheet.prepare_set_column_width(0, 100)
+    spreadsheet.prepare_set_column_width(1, 350)
+    spreadsheet.prepare_set_column_width(2, 150)
+    spreadsheet.prepare_set_cells_format('C:C', {'wrapStrategy': 'WRAP',
+                                                 'horizontalAlignment': 'CENTER',
+                                                 'verticalAlignment': 'MIDDLE',
+                                                 'numberFormat': {'type': 'DATE_TIME',
+                                                                  'pattern': ''}})
+
+    spreadsheet.run_prepared()
 
 
 # args = [email]
@@ -673,31 +696,7 @@ def copy_step(event: Optional[Event] = None, args: Optional[List[str]] = None):
     else:
         spreadsheet.share_with_anybody_for_writing()
 
-    spreadsheet.prepare_set_cells_format('C:C', {'numberFormat': {'type': 'DATE_TIME',
-                                                                  'pattern': '[hh]:[mm]:[ss].000'}})
-
-    cells_range = f'A:C'
-    spreadsheet.prepare_set_values(
-        cells_range=cells_range,
-        values=[['number'] + [step.number for step in steps],
-                ['name'] + [step.name for step in steps],
-                ['date'] + [step.date.strftime("%d/%m/%Y %H:%M:%S") if step.date else None for step in steps]],
-        major_dimension='COLUMNS')
-    spreadsheet.run_prepared()
-
-    spreadsheet.prepare_set_cells_format('A:C', {'wrapStrategy': 'WRAP',
-                                                 'horizontalAlignment': 'CENTER',
-                                                 'verticalAlignment': 'MIDDLE'})
-    spreadsheet.prepare_set_column_width(0, 100)
-    spreadsheet.prepare_set_column_width(1, 350)
-    spreadsheet.prepare_set_column_width(2, 150)
-    spreadsheet.prepare_set_cells_format('C:C', {'wrapStrategy': 'WRAP',
-                                                 'horizontalAlignment': 'CENTER',
-                                                 'verticalAlignment': 'MIDDLE',
-                                                 'numberFormat': {'type': 'DATE_TIME',
-                                                                  'pattern': ''}})
-
-    spreadsheet.run_prepared()
+    update_sheet_step(spreadsheet, steps)
 
     send.message(
         vk=vk,
@@ -710,6 +709,21 @@ def copy_step(event: Optional[Event] = None, args: Optional[List[str]] = None):
     session.close()
 
     return 0
+
+
+def update_sheet_attachment(spreadsheet: Spreadsheet, attachments):
+    cells_range = f'A:A'
+    spreadsheet.prepare_set_values(
+        cells_range=cells_range,
+        values=[['name'] + [attachment.name for attachment in attachments]],
+        major_dimension='COLUMNS')
+
+    spreadsheet.prepare_set_cells_format('A:A', {'wrapStrategy': 'WRAP',
+                                                 'horizontalAlignment': 'CENTER',
+                                                 'verticalAlignment': 'MIDDLE'})
+    spreadsheet.prepare_set_column_width(0, 400)
+
+    spreadsheet.run_prepared()
 
 
 # args = [email]
@@ -738,20 +752,7 @@ def copy_attachment(event: Optional[Event] = None, args: Optional[List[str]] = N
     else:
         spreadsheet.share_with_anybody_for_writing()
 
-    cells_range = f'A:A'
-
-    spreadsheet.prepare_set_values(
-        cells_range=cells_range,
-        values=[['name'] + [attachment.name for attachment in attachments]],
-        major_dimension='COLUMNS')
-    spreadsheet.run_prepared()
-
-    spreadsheet.prepare_set_cells_format('A:A', {'wrapStrategy': 'WRAP',
-                                                 'horizontalAlignment': 'CENTER',
-                                                 'verticalAlignment': 'MIDDLE'})
-    spreadsheet.prepare_set_column_width(0, 400)
-
-    spreadsheet.run_prepared()
+    update_sheet_attachment(spreadsheet, attachments)
 
     send.message(
         vk=vk,
@@ -764,6 +765,25 @@ def copy_attachment(event: Optional[Event] = None, args: Optional[List[str]] = N
     session.close()
 
     return 0
+
+
+def update_sheet_command(spreadsheet: Spreadsheet, commands):
+    cells_range = f'A:C'
+    spreadsheet.prepare_set_values(
+        cells_range=cells_range,
+        values=[['name'] + [command.name for command in commands],
+                ['arguments'] + [';\n'.join(json.loads(command.arguments)) for command in commands],
+                ['admin'] + [command.admin for command in commands]],
+        major_dimension='COLUMNS')
+
+    spreadsheet.prepare_set_cells_format('A:C', {'wrapStrategy': 'WRAP',
+                                                 'horizontalAlignment': 'CENTER',
+                                                 'verticalAlignment': 'MIDDLE'})
+    spreadsheet.prepare_set_column_width(0, 150)
+    spreadsheet.prepare_set_column_width(1, 200)
+    spreadsheet.prepare_set_column_width(2, 100)
+
+    spreadsheet.run_prepared()
 
 
 # args = [email]
@@ -792,28 +812,72 @@ def copy_command(event: Optional[Event] = None, args: Optional[List[str]] = None
     else:
         spreadsheet.share_with_anybody_for_writing()
 
-    cells_range = f'A:C'
-    spreadsheet.prepare_set_values(
-        cells_range=cells_range,
-        values=[['name'] + [command.name for command in commands],
-                ['arguments'] + [';\n'.join(json.loads(command.arguments)) for command in commands],
-                ['admin'] + [command.admin for command in commands]],
-        major_dimension='COLUMNS')
-    spreadsheet.run_prepared()
-
-    spreadsheet.prepare_set_cells_format('A:C', {'wrapStrategy': 'WRAP',
-                                                 'horizontalAlignment': 'CENTER',
-                                                 'verticalAlignment': 'MIDDLE'})
-    spreadsheet.prepare_set_column_width(0, 150)
-    spreadsheet.prepare_set_column_width(1, 200)
-    spreadsheet.prepare_set_column_width(2, 100)
-
-    spreadsheet.run_prepared()
+    update_sheet_command(spreadsheet, commands)
 
     send.message(
         vk=vk,
         ID=event.user_id,
         message=spreadsheet.get_sheet_url()
+    )
+
+    # Завершение работы в БД
+    session.commit()
+    session.close()
+
+    return 0
+
+
+# args = [email]
+def copy(event: Optional[Event] = None, args: Optional[List[str]] = None):
+
+    params = {}
+
+    if args:
+        if not validate_email(args[0]):
+            return 9
+        params['email'] = args[0]
+
+    # Подключение к БД
+    session = get_session(engine)
+
+    users = session.query(User)
+    texts = session.query(Text)
+    commands = session.query(Command)
+    steps = session.query(Step)
+    attachments = session.query(Attachment)
+
+    spreadsheet = Spreadsheet()
+
+    spreadsheet.create(
+        title=f'Имеющиеся в БД данные на {datetime.now()}',
+        sheet_title='User'
+    )
+    update_sheet_user(spreadsheet, users)
+
+    spreadsheet.add_sheet(
+        sheet_title='Text'
+    )
+    update_sheet_text(spreadsheet, texts)
+
+    spreadsheet.add_sheet(
+        sheet_title='Command'
+    )
+    update_sheet_command(spreadsheet, commands)
+
+    spreadsheet.add_sheet(
+        sheet_title='Step'
+    )
+    update_sheet_step(spreadsheet, steps)
+
+    spreadsheet.add_sheet(
+        sheet_title='Attachment'
+    )
+    update_sheet_attachment(spreadsheet, attachments)
+
+    send.message(
+        vk=vk,
+        ID=event.user_id,
+        message=spreadsheet.get_spreadsheet_url()
     )
 
     # Завершение работы в БД

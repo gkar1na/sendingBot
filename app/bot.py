@@ -256,6 +256,10 @@ def start():
                         elif command == 'copy_command':
                             response = commandHandler.copy_command(event, args)
 
+                        # copy
+                        elif command == 'copy':
+                            response = commandHandler.copy(event, args)
+
                         if response:
 
                             # Отправить уведомление о некорректном завершении работы команды

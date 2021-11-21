@@ -123,6 +123,13 @@ class Spreadsheet:
             raise SheetNotSetError()
         return 'https://docs.google.com/spreadsheets/d/' + self.spreadsheet_id + '/edit#gid=' + str(self.sheet_id)
 
+    def get_spreadsheet_url(self):
+        if self.spreadsheet_id is None:
+            raise SpreadsheetNotSetError()
+        if self.sheet_id is None:
+            raise SheetNotSetError()
+        return 'https://docs.google.com/spreadsheets/d/' + self.spreadsheet_id + '/edit'
+
     # Sets current spreadsheet by id; set current sheet as first sheet of this spreadsheet
     def set_spreadsheet_by_id(self, spreadsheet_id):
         spreadsheet = self.service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
