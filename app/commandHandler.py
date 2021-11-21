@@ -261,18 +261,18 @@ def get_commands(event: Optional[Event] = None, args: Optional[List[str]] = None
     else:
         params = {'admin': False}
 
-    if args:
-        if args[0].isdigit():
-            params['quantity'] = int(args[0])
-        else:
-            return 9
-
     commands = [
         {
             'name': command.name,
             'arguments': json.loads(command.arguments)
         } for command in session.query(Command).filter_by(**params)
     ]
+
+    if args:
+        if args[0].isdigit():
+            params['quantity'] = int(args[0])
+        else:
+            return 9
 
     if params and params['quantity'] < len(commands):
         # commands = sorted(commands, key=lambda i: i['date'], reverse=True)[:params['quantity']]
