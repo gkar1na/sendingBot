@@ -1,7 +1,7 @@
 ========== building files ==========
 .idea/*
 .gitignore___jb_old___
-/__pycache__/*
+*/__pycache__/*
 *.py___jb_old___
 
 ========== attachments ==========
