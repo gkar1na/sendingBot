@@ -31,4 +31,4 @@ class Settings(BaseSettings):
         env_file_encoding = 'utf-8'
 
         # uncomment when testing
-        env_prefix = 'TEST_' +
+        env_prefix = 'TEST_' + env_prefix
