@@ -6,6 +6,8 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 import os
 
+from config import settings
+
 
 def get_creds(creds_file_name: str) -> Credentials:
     SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly',
@@ -73,6 +75,7 @@ class Spreadsheet:
         self.sheet_title = None
         self.requests = []
         self.value_ranges = []
+        self.folder_id = settings.GOOGLE_FOLDER_ID
 
     def create(self, title, sheet_title, rows=1000, cols=26, locale='ru_RU', time_zone='Europe/Moscow'):
         spreadsheet = self.service.spreadsheets().create(body={
@@ -85,6 +88,10 @@ class Spreadsheet:
         self.spreadsheet_id = spreadsheet['spreadsheetId']
         self.sheet_id = spreadsheet['sheets'][0]['properties']['sheetId']
         self.sheet_title = spreadsheet['sheets'][0]['properties']['title']
+
+        self.drive_service.files().update(fileId=self.spreadsheet_id,
+                                          addParents=self.folder_id,
+                                          removeParents='root').execute()
 
     def share(self, share_request_body):
         if self.spreadsheet_id is None:

@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     DELAY: Optional[float]
 
     GOOGLE_TABLE_PATH: Optional[str]
+    GOOGLE_FOLDER_ID: Optional[str]
 
     class Config:
         env_prefix = 'MOVEMENT_ACADEMY_'
