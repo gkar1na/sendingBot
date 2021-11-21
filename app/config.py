@@ -32,3 +32,5 @@ class Settings(BaseSettings):
 
         # uncomment when testing
         env_prefix = 'TEST_' + env_prefix
+
+settings = Settings()
