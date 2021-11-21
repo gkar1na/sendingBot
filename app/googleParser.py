@@ -11,7 +11,7 @@ from config import settings
 
 
 def make_domain(link: str) -> str:
-    domain = re.sub(r'[@*]?|(.*vk.com/)','',link)
+    domain = re.sub(r'[@*]?|(.*vk.com/)','',link.lower)
 
     return domain
 
