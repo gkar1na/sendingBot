@@ -236,6 +236,30 @@ def start():
                         elif command == 'load':
                             response = commandHandler.load(event, args)
 
+                        # copy_texts
+                        elif command == 'copy_text':
+                            response = commandHandler.copy_text(event, args)
+
+                        # copy_users
+                        elif command == 'copy_user':
+                            response = commandHandler.copy_user(event, args)
+
+                        # copy_step
+                        elif command == 'copy_step':
+                            response = commandHandler.copy_step(event, args)
+
+                        # copy_attachment
+                        elif command == 'copy_attachment':
+                            response = commandHandler.copy_attachment(event, args)
+
+                        # copy_command
+                        elif command == 'copy_command':
+                            response = commandHandler.copy_command(event, args)
+
+                        # copy
+                        elif command == 'copy':
+                            response = commandHandler.copy(event, args)
+
                         if response:
 
                             # Отправить уведомление о некорректном завершении работы команды
