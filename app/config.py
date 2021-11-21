@@ -23,6 +23,7 @@ class Settings(BaseSettings):
 
     GOOGLE_TABLE_PATH: Optional[str]
     GOOGLE_TABLE_PATH2: Optional[str]
+    GOOGLE_FOLDER_ID: Optional[str]
 
     class Config:
         env_prefix = 'MOVEMENT_ACADEMY_'
@@ -30,7 +31,4 @@ class Settings(BaseSettings):
         env_file_encoding = 'utf-8'
 
         # uncomment when testing
-        env_prefix = 'TEST_' + env_prefix
-
-
-settings = Settings()
+        env_prefix = 'TEST_' +
