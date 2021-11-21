@@ -232,6 +232,10 @@ def start():
                         elif command == 'get_users':
                             response = commandHandler.get_users(event, args)
 
+                        # get_steps
+                        elif command == 'get_steps':
+                            response = commandHandler.get_steps(event, args)
+
                         # load
                         elif command == 'load':
                             response = commandHandler.load(event, args)

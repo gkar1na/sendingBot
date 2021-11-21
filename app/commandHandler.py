@@ -249,7 +249,7 @@ def update_user_step(event: Optional[Event] = None, args: Optional[List[str]] = 
     return 0
 
 
-# args = []
+# args = [quantity]
 def get_commands(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     # Подключение к БД
     session = get_session(engine)
@@ -261,6 +261,12 @@ def get_commands(event: Optional[Event] = None, args: Optional[List[str]] = None
     else:
         params = {'admin': False}
 
+    if args:
+        if args[0].isdigit():
+            params['quantity'] = int(args[0])
+        else:
+            return 9
+
     commands = [
         {
             'name': command.name,
@@ -268,24 +274,34 @@ def get_commands(event: Optional[Event] = None, args: Optional[List[str]] = None
         } for command in session.query(Command).filter_by(**params)
     ]
 
+    if params and params['quantity'] < len(commands):
+        # commands = sorted(commands, key=lambda i: i['date'], reverse=True)[:params['quantity']]
+        commands = commands[:params['quantity']]
+
     commands = sorted(commands, key=lambda i: i['name'])
+
+    message_texts = []
 
     if not commands:
         message_text = 'У вас нет доступных команд.'
 
     else:
-        message_text = 'Найдены следующие доступные команды:\n'
-        for command in commands:
-            message_text += f'\n!{command["name"]}'
+        message_text = ''
+        for i, command in enumerate(commands):
+            if i and i % 50 == 0:
+                message_texts.append(message_text)
+                message_text = ''
+            message_text += f'\n{i + 1}) !{command["name"]}'
             for arg in command['arguments']:
-                message_text += f' /{arg}/'
-            # message_text += '\n'
+                message_text += f' <{arg}>'
 
-    send.message(
-        vk=vk,
-        ID=event.user_id,
-        message=message_text
-    )
+    message_texts.append(message_text)
+    for message_text in message_texts:
+        send.message(
+            vk=vk,
+            ID=event.user_id,
+            message=message_text
+        )
 
     # Завершение работы в БД
     session.commit()
@@ -405,6 +421,61 @@ def get_texts(event: Optional[Event] = None, args: Optional[List[str]] = None) -
                 message_text = ''
             step = 'без шага' if text["step"] not in steps.keys() else f'{steps[text["step"]]} - {text["step"]}'
             message_text += f'{i + 1}) "{text["title"]}" ({step})\n'
+
+    message_texts.append(message_text)
+    for message_text in message_texts:
+        send.message(
+            vk=vk,
+            ID=event.user_id,
+            message=message_text
+        )
+
+    # Завершение работы в БД
+    session.commit()
+    session.close()
+
+    return 0
+
+
+# args = [quantity]
+def get_steps(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
+
+    params = {}
+
+    if args:
+        if args[0].isdigit():
+            params['quantity'] = int(args[0])
+        else:
+            return 9
+
+    # Подключение к БД
+    session = get_session(engine)
+
+    steps = [
+        {
+            'number': step.number,
+            'name': step.name,
+            'date': step.date
+        } for step in session.query(Step).filter(Step.date!=None)
+    ]
+
+    if params and params['quantity'] < len(steps):
+        steps = sorted(steps, key=lambda i: i['date'], reverse=True)[:params['quantity']]
+
+    steps = sorted(steps, key=lambda i: i['number'])
+
+    message_texts = []
+
+    if not steps:
+        message_text = 'Список шагов пуст.'
+
+    else:
+        message_text = ''
+        for i, step in enumerate(steps):
+            if i and i % 50 == 0:
+                message_texts.append(message_text)
+                message_text = ''
+            message_text += f'{step["number"]}) {step["name"]}\n'
 
     message_texts.append(message_text)
     for message_text in message_texts:
@@ -590,7 +661,7 @@ def copy_text(event: Optional[Event] = None, args: Optional[List[str]] = None):
     else:
         spreadsheet.share_with_anybody_for_writing()
 
-    update_sheet_text(spreadsheet, texts, params)
+    update_sheet_text(spreadsheet, texts)
 
     send.message(
         vk=vk,
