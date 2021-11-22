@@ -275,7 +275,7 @@ def get_commands(event: Optional[Event] = None, args: Optional[List[str]] = None
         else:
             return 9
 
-    if params and params['quantity'] < len(commands):
+    if params and 'quantity' in params.keys() and params['quantity'] < len(commands):
         # commands = sorted(commands, key=lambda i: i['date'], reverse=True)[:params['quantity']]
         commands = commands[:params['quantity']]
 
