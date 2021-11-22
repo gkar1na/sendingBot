@@ -51,27 +51,27 @@ def start():
     for dialog in vk.messages.getDialogs(unanswered=1)['items']:
 
         # Айди пользователя
-        ID = dialog['message']['user_id']
+        chat_id = dialog['message']['user_id']
 
         # Попытка отправить сообщение
         try:
             sending.message(
                 vk=vk,
-                ID=ID,
-                message=message
+                chat_id=chat_id,
+                text=message
             )
 
         # Оповещение о недошедшем сообщении
         except Exception as e:
             # Подключение к БД
             session = get_session(engine)
-            user = session.query(User).filter_by(chat_id=ID).first()
+            user = session.query(User).filter_by(chat_id=chat_id).first()
             if user:
-                message = f'Пользователю vk.com/{user.domain} ({ID}) не отправилось сообщение по причине: "{e}"'
+                message = f'Пользователю vk.com/{user.domain} ({chat_id}) не отправилось сообщение по причине: "{e}"'
                 sending.message(
                     vk=vk,
-                    ID=settings.MY_VK_ID,
-                    message=message
+                    chat_id=settings.MY_VK_ID,
+                    text=message
                 )
             session.close()
 
@@ -109,15 +109,17 @@ def start():
                             date=datetime.now()
                         )
                         session.add(user)
-                        logger.info(f'Добавлен пользователь: chat_id="{event.user_id}", link=vk.com/{user_info["domain"]}')
+                        logger.info(f'Добавлен пользователь: '
+                                    f'chat_id="{event.user_id}", '
+                                    f'link=vk.com/{user_info["domain"]}')
 
-                        text_welcome = session.query(Text).filter_by(title=settings.TITLE_WELCOME).first()
+                        text_welcome = json.loads(session.query(Text).filter_by(title=settings.TITLE_WELCOME).first())
                         if text_welcome:
                             sending.message(
                                 vk=vk,
-                                ID=event.user_id,
-                                message=text_welcome.text,
-                                attachment=text_welcome.attachments
+                                chat_id=event.user_id,
+                                text=text_welcome.text,
+                                attachments=text_welcome.attachments
                             )
                             texts = json.loads(user.texts)
                             texts.append(text_welcome.text_id)
@@ -126,8 +128,8 @@ def start():
 
                         sending.message(
                             vk=vk,
-                            ID=settings.MY_VK_ID,
-                            message=f'Пользователь vk.com/{user_info["domain"]} ({event.user_id}) написал боту.'
+                            chat_id=settings.MY_VK_ID,
+                            text=f'Пользователь vk.com/{user_info["domain"]} ({event.user_id}) написал боту.'
                         )
 
                     # Сохранение возможных изменений в БД
@@ -165,8 +167,8 @@ def start():
                     if not session.query(Command).filter_by(name=command).first():
                         sending.message(
                             vk=vk,
-                            ID=event.user_id,
-                            message='Такой команды не существует.'
+                            chat_id=event.user_id,
+                            text='Такой команды не существует.'
                         )
 
                         continue
@@ -178,8 +180,8 @@ def start():
                         # Отправить подтверждение начала выполнения команды
                         sending.message(
                             vk=vk,
-                            ID=event.user_id,
-                            message=f'Вызвана команда:\n{command}. Начинаю выполнять...'
+                            chat_id=event.user_id,
+                            text=f'Вызвана команда:\n{command}. Начинаю выполнять...'
                         )
 
                         # Разделение текста сообщения на аргументы команды, если они введены
@@ -287,10 +289,10 @@ def start():
                             # Отправить уведомление о некорректном завершении работы команды
                             sending.message(
                                 vk=vk,
-                                ID=event.user_id,
-                                message=f'=== Команда "{command}" не выполнена. ===\n'
-                                        f'{errors[response]}\n'
-                                        f'========================================='
+                                chat_id=event.user_id,
+                                text=f'=== Команда "{command}" не выполнена. ===\n'
+                                     f'{errors[response]}\n'
+                                     f'========================================='
                             )
 
                             # Завершение работы в БД
@@ -305,8 +307,8 @@ def start():
                         # Отправить уведомление об успешном завершении работы команды
                         sending.message(
                             vk=vk,
-                            ID=event.user_id,
-                            message='Команда успешно выполнена.'
+                            chat_id=event.user_id,
+                            text='Команда успешно выполнена.'
                         )
 
                         # Завершение работы в БД
@@ -320,8 +322,8 @@ def start():
                     else:
                         sending.message(
                             vk=vk,
-                            ID=event.user_id,
-                            message=f'Недостаточно прав.'
+                            chat_id=event.user_id,
+                            text=f'Недостаточно прав.'
                         )
 
                 # Задержка от спама
