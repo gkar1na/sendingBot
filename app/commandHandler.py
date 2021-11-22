@@ -1,3 +1,4 @@
+import re
 from vk_api.longpoll import Event, VkLongPoll
 import vk_api
 from typing import List, Optional
@@ -10,6 +11,115 @@ import update
 import get
 import copyToSpreadsheet
 
+
+# TODO by new structure
+# # args = [{text.title}, {text.attachments}]
+# def add_attachments(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
+#     if len(args) < 2 or not args[0] or not args[1]:
+#         return 1
+# 
+#     params = {'title': args[0]}
+# 
+#     # Подключение к БД
+#     session = get_session(engine)
+# 
+#     text = session.query(Text).filter_by(**params).first()
+# 
+#     if not text:
+#         #завершение работы в БД
+#         session.close()
+# 
+#         return 2
+# 
+#     existing_attachments = json.loads(text.attachments)
+#     new_attachments = {'name': [*existing_attachments]}
+# 
+#     for arg in args[1].split(', '):
+#         if session.query(Attachment).filter_by(name=arg).first():
+#             new_attachments['name'].append(arg)
+# 
+#     if not new_attachments['name']:
+#         #завершение работы в БД
+#         session.close()
+# 
+#         return 8
+# 
+#     text.attachments = json.dumps(new_attachments['name'])
+# 
+#     # Завершение работы в БД
+#     session.commit()
+#     session.close()
+# 
+#     return 0
+# 
+# 
+# # args = [{text.title}, {text.attachments}]
+# def delete_attachments_by_id(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
+#     if len(args) < 2 or not args[0] or not args[1]:
+#         return 1
+# 
+#     params = {'title': args[0]}
+# 
+#     # Подключение к БД
+#     session = get_session(engine)
+# 
+#     text = session.query(Text).filter_by(**params).first()
+# 
+#     if not text:
+#         #завершение работы в БД
+#         session.close()
+# 
+#         return 2
+# 
+#     existing_attachments = json.loads(text.attachments)
+#     edited_attachments = {'name': []}
+# 
+#     if sorted(args[1].split(', ')) == sorted(existing_attachments):
+#         text.attachments = json.dumps([])
+# 
+#         #завершение работы в БД
+#         session.commit()
+#         session.close()
+# 
+#         return 0
+# 
+#     for attach in existing_attachments:
+#         if attach not in args[1].split(', '):
+#             edited_attachments['name'].append(attach)
+# 
+#     if not edited_attachments['name']:
+#         #завершение работы в БД
+#         session.close()
+# 
+#         return 8
+# 
+#     text.attachments = json.dumps(edited_attachments['name'])
+# 
+#     # Завершение работы в БД
+#     session.commit()
+#     session.close()
+# 
+#     return 0
+# 
+# # args = [{text.title}]
+# def delete_attachments(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
+#     if len(args) < 1 or not args[0]:
+#         return 1
+# 
+#     params = {'title': args[0]}
+# 
+#     # Подключение к БД
+#     session = get_session(engine)
+# 
+#     text = session.query(Text).filter_by(**params).first()
+# 
+#     text.attachments = json.dumps([])
+# 
+#     #завершение работы в БД
+#     session.commit()
+#     session.close()
+# 
+#     return 0
 
 class Handler:
     def __init__(self):

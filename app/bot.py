@@ -29,7 +29,7 @@ def start():
         4: 'Такого шага не существует.',
         5: 'Такого пользователя не существует.',
         6: 'Существуют только значения "True" и "False" (регистр не важен)',
-        7: 'Вложение не прикрепленно.',
+        7: 'Вложение не прикреплено.',
         8: 'Такого вложения не существует.',
         9: 'Неправильные параметры.',
         10: 'Текст с таким заголовком не заполнен.'
@@ -97,15 +97,17 @@ def start():
                         # Получение информации о пользователе
                         user_info = vk.users.get(user_id=event.user_id, fields='domain')
                         user_info = user_info[0]
-                        user = User(chat_id=event.user_id,
-                                    domain=user_info['domain'],
-                                    first_name=user_info['first_name'],
-                                    last_name=user_info['last_name'],
-                                    step=1,
-                                    texts=json.dumps([]),
-                                    admin=False,
-                                    lectures=json.dumps([]),
-                                    date=datetime.now())
+                        user = User(
+                            chat_id=event.user_id,
+                            domain=user_info['domain'],
+                            first_name=user_info['first_name'],
+                            last_name=user_info['last_name'],
+                            step=1,
+                            texts=json.dumps([]),
+                            admin=False,
+                            lectures=json.dumps([]),
+                            date=datetime.now()
+                        )
                         session.add(user)
                         logger.info(f'Добавлен пользователь: chat_id="{event.user_id}", link=vk.com/{user_info["domain"]}')
 
@@ -115,7 +117,7 @@ def start():
                                 vk=vk,
                                 ID=event.user_id,
                                 message=text_welcome.text,
-                                attachment=text_welcome.attachment
+                                attachment=text_welcome.attachments
                             )
                             texts = json.loads(user.texts)
                             texts.append(text_welcome.text_id)
@@ -208,6 +210,19 @@ def start():
                         elif command == 'update_attachment':
                             response = handler.update_attachment(event, args)
 
+                        # TODO by new structure
+                        # # add_attachment "{text.title}" "{text.attachments}"
+                        # elif command == 'add_attachments':
+                        #     response = commandHandler.add_attachments(event, args)
+                        #
+                        # # delete_attachments_by_id "{text.title}" "{text.attachments}"
+                        # elif command == 'delete_attachments_by_id':
+                        #     response = commandHandler.delete_attachments_by_id(event, args)
+                        #
+                        # # delete_attachments "{text.title}"
+                        # elif command == 'delete_attachments':
+                        #     response = commandHandler.delete_attachments(event, args)
+
                         # update_text_step "{text.title}" "{step.number} | {step.name}"
                         elif command == 'update_text_step':
                             response = handler.update_text_step(event, args)
@@ -270,11 +285,13 @@ def start():
                         if response:
 
                             # Отправить уведомление о некорректном завершении работы команды
-                            sending.message(vk=vk,
-                                            ID=event.user_id,
-                                            message=f'=== Команда "{command}" не выполнена. ===\n'
-                                                    f'{errors[response]}\n'
-                                                    f'=========================================')
+                            sending.message(
+                                vk=vk,
+                                ID=event.user_id,
+                                message=f'=== Команда "{command}" не выполнена. ===\n'
+                                        f'{errors[response]}\n'
+                                        f'========================================='
+                            )
 
                             # Завершение работы в БД
                             session.commit()

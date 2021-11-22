@@ -2,12 +2,14 @@ from vk_api.utils import get_random_id
 from vk_api.keyboard import VkKeyboard
 import vk_api
 import time
+from typing import Optional, Type, List
 
 from config import settings
 from create_tables import get_session, engine, User
 
 
-def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None, attachment=None) -> None:
+def message(vk: Type[vk_api.vk_api.VkApiMethod], ID: Type[int], message: Type[str],
+            keyboard: Optional[vk_api.keyboard.VkKeyboard] = None, attachment: Optional[List[str]] = None) -> None:
     """Функция, отправляющая сообщение пользователю.
 
     :param vk: начатая сессия ВК с авторизацией в сообществе
@@ -23,7 +25,7 @@ def message(vk: vk_api.vk_api.VkApiMethod, ID: int, message: str, keyboard=None,
     :type keyboard: VkKeyboard
 
     :param attachment: необязательное вложение в сообщение
-    :type attachment: str
+    :type attachment: list[str]
 
     :return: ничего не возвращает
     :rtype: None

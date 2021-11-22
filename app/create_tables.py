@@ -52,7 +52,7 @@ class Text(db):
     step = Column(Integer, ForeignKey('step.number', onupdate='cascade', ondelete='cascade'))
     title = Column(String, unique=True)
     text = Column(String)
-    attachment = Column(String, ForeignKey('attachment.name', onupdate='cascade', ondelete='cascade'))
+    attachments = Column(String)
     date = Column(DateTime)
 
 
