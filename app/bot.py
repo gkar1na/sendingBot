@@ -31,7 +31,8 @@ def start():
         6: 'Существуют только значения "True" и "False" (регистр не важен)',
         7: 'Вложение не прикрепленно.',
         8: 'Такого вложения не существует.',
-        9: 'Неправильные параметры.'
+        9: 'Неправильные параметры.',
+        10: 'Текст с таким заголовком не заполнен.'
     }
 
     # Подключение логов
@@ -186,83 +187,85 @@ def start():
 
                         # Обработчик команд:
                         response = -1
-
-                        # send_message "{text.title}" "OPTIONALLY: {step.number} | {step.name}"
-                        if command == 'send_message':
-                            response = commandHandler.send_message(event, args)
+                        handler = commandHandler.Handler()
 
                         # new_title "{text.title}"
-                        elif command == 'new_title':
-                            response = commandHandler.new_title(event, args)
+                        if command == 'new_title':
+                            response = handler.new_title(event, args)
                             # response = vkCommandHandler.new_next(event, args)
-
-                        # update_text "{text.title}" "text.text"
-                        elif command == 'update_text':
-                            response = commandHandler.update_text(event, args)
-
-                        # update_attachment "{text.title}" "{text.attachment}"
-                        elif command == 'update_attachment':
-                            response = commandHandler.update_attachment(event, args)
-
-                        # update_text_step "{text.title}" "{step.number} | {step.name}"
-                        elif command == 'update_text_step':
-                            response = commandHandler.update_text_step(event, args)
-
-                        # update_user_step "{user.chat_id} | {user.domain}" "{step.number} | {step.name}"
-                        elif command == 'update_user_step':
-                            response = commandHandler.update_user_step(event, args)
-
-                        # get_commands
-                        elif command == 'get_commands':
-                            response = commandHandler.get_commands(event, args)
-
-                        # update_user_admin "{user.domain}" "{user.admin}"
-                        elif command == 'update_user_admin':
-                            response = commandHandler.update_user_admin(event, args)
-
-                        # check
-                        elif command == 'check':
-                            response = commandHandler.check(event, args)
-
-                        # get_texts
-                        elif command == 'get_texts':
-                            response = commandHandler.get_texts(event, args)
-
-                        # get_users
-                        elif command == 'get_users':
-                            response = commandHandler.get_users(event, args)
-
-                        # get_steps
-                        elif command == 'get_steps':
-                            response = commandHandler.get_steps(event, args)
 
                         # load
                         elif command == 'load':
-                            response = commandHandler.load(event, args)
+                            response = handler.load(event, args)
 
-                        # copy_texts
-                        elif command == 'copy_text':
-                            response = commandHandler.copy_text(event, args)
+                        # send_message "{text.title}" "OPTIONALLY: {step.number} | {step.name}"
+                        elif command == 'send_message':
+                            response = handler.send_message(event, args)
 
-                        # copy_users
-                        elif command == 'copy_user':
-                            response = commandHandler.copy_user(event, args)
+                        # update_text "{text.title}" "text.text"
+                        elif command == 'update_text':
+                            response = handler.update_text(event, args)
 
-                        # copy_step
-                        elif command == 'copy_step':
-                            response = commandHandler.copy_step(event, args)
+                        # update_attachment "{text.title}" "{text.attachment}"
+                        elif command == 'update_attachment':
+                            response = handler.update_attachment(event, args)
 
-                        # copy_attachment
-                        elif command == 'copy_attachment':
-                            response = commandHandler.copy_attachment(event, args)
+                        # update_text_step "{text.title}" "{step.number} | {step.name}"
+                        elif command == 'update_text_step':
+                            response = handler.update_text_step(event, args)
 
-                        # copy_command
-                        elif command == 'copy_command':
-                            response = commandHandler.copy_command(event, args)
-
-                        # copy
-                        elif command == 'copy':
-                            response = commandHandler.copy(event, args)
+                        # update_user_step "{user.chat_id} | {user.domain}" "{step.number} | {step.name}"
+                        elif command == 'update_user_step':
+                            response = handler.update_user_step(event, args)
+                        #
+                        # # get_commands
+                        # elif command == 'get_commands':
+                        #     response = handler.get_commands(event, args)
+                        #
+                        # # update_user_admin "{user.domain}" "{user.admin}"
+                        # elif command == 'update_user_admin':
+                        #     response = handler.update_user_admin(event, args)
+                        #
+                        # # check
+                        # elif command == 'check':
+                        #     response = commandHandler.check(event, args)
+                        #
+                        # # get_texts
+                        # elif command == 'get_texts':
+                        #     response = commandHandler.get_texts(event, args)
+                        #
+                        # # get_users
+                        # elif command == 'get_users':
+                        #     response = commandHandler.get_users(event, args)
+                        #
+                        # # get_steps
+                        # elif command == 'get_steps':
+                        #     response = commandHandler.get_steps(event, args)
+                        #
+                        #
+                        # # copy_texts
+                        # elif command == 'copy_text':
+                        #     response = commandHandler.copy_text(event, args)
+                        #
+                        # # copy_users
+                        # elif command == 'copy_user':
+                        #     response = commandHandler.copy_user(event, args)
+                        #
+                        # # copy_step
+                        # elif command == 'copy_step':
+                        #     response = commandHandler.copy_step(event, args)
+                        #
+                        # # copy_attachment
+                        # elif command == 'copy_attachment':
+                        #     response = commandHandler.copy_attachment(event, args)
+                        #
+                        # # copy_command
+                        # elif command == 'copy_command':
+                        #     response = commandHandler.copy_command(event, args)
+                        #
+                        # # copy
+                        # elif command == 'copy':
+                        #     response = commandHandler.copy(event, args)
 
                         if response:
 

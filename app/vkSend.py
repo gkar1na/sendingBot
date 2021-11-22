@@ -33,6 +33,8 @@ def messages(vk: vk_api.vk_api.VkApiMethod,
     text = session.query(Text).filter_by(**params).first()
     if not text:
         return 2
+    if not text.text:
+        return 10
 
     params = {}
     if len(args) > 1 and args[1].isdigit():
@@ -42,7 +44,7 @@ def messages(vk: vk_api.vk_api.VkApiMethod,
         if not step:
             return 4
         params['step'] = step.number
-    elif text.step.isdigit():
+    elif str(text.step).isdigit():
         params['step'] = text.step
 
     for user in session.query(User).filter_by(**params):
