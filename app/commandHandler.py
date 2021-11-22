@@ -1,3 +1,5 @@
+import re
+
 from vk_api.longpoll import Event, VkLongPoll
 import vk_api
 from typing import List, Optional
@@ -35,7 +37,9 @@ def new_title(event: Optional[Event] = None, args: Optional[List[str]] = None) -
 
         return 3
 
-    session.add(Text(title=args[0], date=datetime.now()))
+    session.add(Text(title=args[0],
+                     attachments=json.dumps([]),
+                     date=datetime.now()))
 
     # Завершение работы в БД
     session.commit()
@@ -44,7 +48,7 @@ def new_title(event: Optional[Event] = None, args: Optional[List[str]] = None) -
     return 0
 
 
-# args = [text.title, None | step.name | step.numbed]
+# args = [text.title, None | step.name | step.number]
 def send_message(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     if not args or not args[0]:
         return 1
@@ -61,7 +65,7 @@ def send_message(event: Optional[Event] = None, args: Optional[List[str]] = None
             params['step'] = int(args[1])
         elif len(args) > 1 and args[1]:
             params['step'] = session.query(Step).filter_by(name=args[1]).first().number
-        elif text.step.isdigit():
+        elif str(text.step.isdigit()):
             params['step'] = text.step
 
         for user in session.query(User).filter_by(**params):
@@ -72,7 +76,7 @@ def send_message(event: Optional[Event] = None, args: Optional[List[str]] = None
                     vk=vk,
                     ID=user.chat_id,
                     message=text.text,
-                    attachment=text.attachment
+                    attachment=json.loads(text.attachments)
                 )
                 texts.append(text.text_id)
                 user.texts = json.dumps(texts)
@@ -117,8 +121,8 @@ def update_text(event: Optional[Event] = None, args: Optional[List[str]] = None)
     return 0
 
 
-# args = [{text.title}, {text.attachment}]
-def update_attachment(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
+# args = [{text.title}, {text.attachments}]
+def add_attachments(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     if len(args) < 2 or not args[0] or not args[1]:
         return 1
 
@@ -130,20 +134,25 @@ def update_attachment(event: Optional[Event] = None, args: Optional[List[str]] =
     text = session.query(Text).filter_by(**params).first()
 
     if not text:
-        # Завершение работы в БД
+        #завершение работы в БД
         session.close()
 
         return 2
 
-    attach_params = {'name': args[1]}
+    existing_attachments = json.loads(text.attachments)
+    new_attachments = {'name': [*existing_attachments]}
 
-    if not session.query(Attachment).filter_by(**attach_params).first():
-        # Завершение работы в БД
+    for arg in args[1].split(', '):
+        if session.query(Attachment).filter_by(name=arg).first():
+            new_attachments['name'].append(arg)
+
+    if not new_attachments['name']:
+        #завершение работы в БД
         session.close()
 
         return 8
 
-    text.attachment = attach_params['name']
+    text.attachments = json.dumps(new_attachments['name'])
 
     # Завершение работы в БД
     session.commit()
@@ -151,6 +160,74 @@ def update_attachment(event: Optional[Event] = None, args: Optional[List[str]] =
 
     return 0
 
+
+# args = [{text.title}, {text.attachments}]
+def delete_attachments_by_id(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
+    if len(args) < 2 or not args[0] or not args[1]:
+        return 1
+
+    params = {'title': args[0]}
+
+    # Подключение к БД
+    session = get_session(engine)
+
+    text = session.query(Text).filter_by(**params).first()
+
+    if not text:
+        #завершение работы в БД
+        session.close()
+
+        return 2
+
+    existing_attachments = json.loads(text.attachments)
+    edited_attachments = {'name': []}
+
+    if sorted(args[1].split(', ')) == sorted(existing_attachments):
+        text.attachments = json.dumps([])
+
+        #завершение работы в БД
+        session.commit()
+        session.close()
+
+        return 0
+
+    for attach in existing_attachments:
+        if attach not in args[1].split(', '):
+            edited_attachments['name'].append(attach)
+
+    if not edited_attachments['name']:
+        #завершение работы в БД
+        session.close()
+
+        return 8
+
+    text.attachments = json.dumps(edited_attachments['name'])
+
+    # Завершение работы в БД
+    session.commit()
+    session.close()
+
+    return 0
+
+# args = [{text.title}]
+def delete_attachments(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
+    if len(args) < 1 or not args[0]:
+        return 1
+
+    params = {'title': args[0]}
+
+    # Подключение к БД
+    session = get_session(engine)
+
+    text = session.query(Text).filter_by(**params).first()
+
+    text.attachments = json.dumps([])
+
+    #завершение работы в БД
+    session.commit()
+    session.close()
+
+    return 0
 
 # args = [{text.title}, {step.number} | {step.name}]
 def update_text_step(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
@@ -590,7 +667,7 @@ def load(event: Optional[Event] = None, args: Optional[List[str]] = None):
                 vk=vk,
                 ID=event.user_id,
                 message=f'{params["name"]}',
-                attachment=params['name']
+                attachment=list(params['name'])
             )
 
             continue
@@ -601,7 +678,7 @@ def load(event: Optional[Event] = None, args: Optional[List[str]] = None):
             vk=vk,
             ID=event.user_id,
             message=params['name'],
-            attachment=params['name']
+            attachment=list(params['name'])
         )
 
     # Завершение работы в БД

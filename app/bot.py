@@ -29,7 +29,7 @@ def start():
         4: 'Такого шага не существует.',
         5: 'Такого пользователя не существует.',
         6: 'Существуют только значения "True" и "False" (регистр не важен)',
-        7: 'Вложение не прикрепленно.',
+        7: 'Вложение не прикреплено.',
         8: 'Такого вложения не существует.',
         9: 'Неправильные параметры.'
     }
@@ -116,7 +116,7 @@ def start():
                                 vk=vk,
                                 ID=event.user_id,
                                 message=text_welcome.text,
-                                attachment=text_welcome.attachment
+                                attachment=text_welcome.attachments
                             )
                             texts = json.loads(user.texts)
                             texts.append(text_welcome.text_id)
@@ -200,9 +200,17 @@ def start():
                         elif command == 'update_text':
                             response = commandHandler.update_text(event, args)
 
-                        # update_attachment "{text.title}" "{text.attachment}"
-                        elif command == 'update_attachment':
-                            response = commandHandler.update_attachment(event, args)
+                        # add_attachment "{text.title}" "{text.attachments}"
+                        elif command == 'add_attachments':
+                            response = commandHandler.add_attachments(event, args)
+
+                        # delete_attachments_by_id "{text.title}" "{text.attachments}"
+                        elif command == 'delete_attachments_by_id':
+                            response = commandHandler.delete_attachments_by_id(event, args)
+
+                        # delete_attachments "{text.title}"
+                        elif command == 'delete_attachments':
+                            response = commandHandler.delete_attachments(event, args)
 
                         # update_text_step "{text.title}" "{step.number} | {step.name}"
                         elif command == 'update_text_step':
