@@ -143,3 +143,36 @@ def user_step_entry(vk: vk_api.vk_api.VkApiMethod,
 
     session.commit()
     return 0
+
+
+# args = [{user.domain}, {user.admin]
+def user_admin_entry(vk: vk_api.vk_api.VkApiMethod,
+                     session: Session,
+                     event: Optional[Event] = None,
+                     args: Optional[List[str]] = None) -> int:
+    """ The function of updating an admin from the User table in DB.
+
+    :param vk: session for connecting to VK API
+    :param session: session to connect to the database
+    :param event: event object in VK
+    :param args: arguments of the command entered
+
+    :return: error number or 0
+    """
+    if len(args) < 2 or not args[0] or not args[1]:
+        return 1
+
+    params = {'domain': args[0]}
+
+    user = session.query(User).filter_by(**params).first()
+    if not user:
+        return 5
+    if args[1].lower() == 'true':
+        user.admin = True
+    elif args[1].lower() == 'false':
+        user.admin = False
+    else:
+        return 6
+
+    session.commit()
+    return 0

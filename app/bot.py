@@ -97,17 +97,15 @@ def start():
                         # Получение информации о пользователе
                         user_info = vk.users.get(user_id=event.user_id, fields='domain')
                         user_info = user_info[0]
-                        user = User(
-                            chat_id=event.user_id,
-                            domain=user_info['domain'],
-                            first_name=user_info['first_name'],
-                            last_name=user_info['last_name'],
-                            step=1,
-                            texts=json.dumps([]),
-                            admin=False,
-                            lectures=json.dumps([]),
-                            date=datetime.now()
-                        )
+                        user = User(chat_id=event.user_id,
+                                    domain=user_info['domain'],
+                                    first_name=user_info['first_name'],
+                                    last_name=user_info['last_name'],
+                                    step=1,
+                                    texts=json.dumps([]),
+                                    admin=False,
+                                    lectures=json.dumps([]),
+                                    date=datetime.now())
                         session.add(user)
                         logger.info(f'Добавлен пользователь: chat_id="{event.user_id}", link=vk.com/{user_info["domain"]}')
 
@@ -222,61 +220,61 @@ def start():
                         elif command == 'get_commands':
                             response = handler.get_commands(event, args)
 
-                        # # update_user_admin "{user.domain}" "{user.admin}"
-                        # elif command == 'update_user_admin':
-                        #     response = handler.update_user_admin(event, args)
-                        #
-                        # # check
-                        # elif command == 'check':
-                        #     response = commandHandler.check(event, args)
-                        #
-                        # # get_texts
-                        # elif command == 'get_texts':
-                        #     response = commandHandler.get_texts(event, args)
-                        #
-                        # # get_users
-                        # elif command == 'get_users':
-                        #     response = commandHandler.get_users(event, args)
-                        #
-                        # # get_steps
-                        # elif command == 'get_steps':
-                        #     response = commandHandler.get_steps(event, args)
-                        #
-                        #
-                        # # copy_texts
-                        # elif command == 'copy_text':
-                        #     response = commandHandler.copy_text(event, args)
-                        #
-                        # # copy_users
-                        # elif command == 'copy_user':
-                        #     response = commandHandler.copy_user(event, args)
-                        #
-                        # # copy_step
-                        # elif command == 'copy_step':
-                        #     response = commandHandler.copy_step(event, args)
-                        #
-                        # # copy_attachment
-                        # elif command == 'copy_attachment':
-                        #     response = commandHandler.copy_attachment(event, args)
-                        #
-                        # # copy_command
-                        # elif command == 'copy_command':
-                        #     response = commandHandler.copy_command(event, args)
-                        #
-                        # # copy
-                        # elif command == 'copy':
-                        #     response = commandHandler.copy(event, args)
+                        # update_user_admin "{user.domain}" "{user.admin}"
+                        elif command == 'update_user_admin':
+                            response = handler.update_user_admin(event, args)
+
+                        # check
+                        elif command == 'check':
+                            response = handler.check(event, args)
+
+                        # get_texts
+                        elif command == 'get_texts':
+                            response = handler.get_texts(event, args)
+
+                        # get_steps
+                        elif command == 'get_steps':
+                            response = handler.get_steps(event, args)
+
+                        # get_users
+                        elif command == 'get_users':
+                            response = handler.get_users(event, args)
+
+                        # copy_texts
+                        elif command == 'copy_text':
+                            response = handler.copy_text(event, args)
+
+                        # copy_users
+                        elif command == 'copy_user':
+                            response = handler.copy_user(event, args)
+
+                        # copy_step
+                        elif command == 'copy_step':
+                            response = handler.copy_step(event, args)
+
+                        # copy_attachment
+                        elif command == 'copy_attachment':
+                            response = handler.copy_attachment(event, args)
+
+                        # copy_command
+                        elif command == 'copy_command':
+                            response = handler.copy_command(event, args)
+
+                        # copy
+                        elif command == 'copy':
+                            response = handler.copy(event, args)
+
+                        handler.session.close()
+                        del handler
 
                         if response:
 
                             # Отправить уведомление о некорректном завершении работы команды
-                            sending.message(
-                                vk=vk,
-                                ID=event.user_id,
-                                message=f'=== Команда "{command}" не выполнена. ===\n'
-                                        f'{errors[response]}\n'
-                                        f'========================================='
-                            )
+                            sending.message(vk=vk,
+                                            ID=event.user_id,
+                                            message=f'=== Команда "{command}" не выполнена. ===\n'
+                                                    f'{errors[response]}\n'
+                                                    f'=========================================')
 
                             # Завершение работы в БД
                             session.commit()

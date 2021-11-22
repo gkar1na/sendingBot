@@ -59,3 +59,34 @@ def messages(vk: vk_api.vk_api.VkApiMethod,
 
     session.commit()
     return 0
+
+
+# args = []
+def unreceived_messages(vk: vk_api.vk_api.VkApiMethod,
+                        session: Session,
+                        event: Optional[Event] = None,
+                        args: Optional[List[str]] = None) -> int:
+    """ The function of launching mailing of all unreceived messages to VK.
+
+    :param vk: session for connecting to VK API
+    :param session: session to connect to the database
+    :param event: event object in VK
+    :param args: arguments of the command entered
+
+    :return: error number or 0
+    """
+    users = session.query(User)
+    texts = session.query(Text)
+    for user in users:
+        user_texts = set(json.loads(user.texts))
+        for text in texts:
+            if text.text_id not in user_texts and text.step and text.step <= user.step:
+                send.message(vk=vk,
+                             ID=user.chat_id,
+                             message=text.text,
+                             attachment=text.attachment)
+                user_texts.add(text.text_id)
+        user.texts = json.dumps(list(user_texts))
+        session.commit()
+
+    return 0
