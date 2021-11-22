@@ -6,6 +6,7 @@ import json
 from sqlalchemy import desc, asc
 from validate_email import validate_email
 from sheetsParser import Spreadsheet
+import time
 
 from config import settings
 from create_tables import get_session, engine, Text, User, Step, Command, Attachment
@@ -521,7 +522,7 @@ def get_users(event: Optional[Event] = None, args: Optional[List[str]] = None) -
         steps = {step.number: step.name for step in session.query(Step)}
         titles = {text.text_id: text.title for text in session.query(Text)}
         for i, user in enumerate(users):
-            if i and i % 50 == 0:
+            if i and i % 5 == 0:
                 message_texts.append(message_text)
                 message_text = ''
             step = 'без шага' if user.step not in steps.keys() else f'{steps[user.step]} - {user.step}'
@@ -531,6 +532,9 @@ def get_users(event: Optional[Event] = None, args: Optional[List[str]] = None) -
                 message_text += '- Нет полученных текстов.\n\n'
             else:
                 message_text += '- Полученные тексты - '
+                for i, text in enumerate(texts):
+                    if text not in titles.keys():
+                        texts.pop(i)
                 message_text += '; '.join(sorted({f'"{titles[text]}"' for text in texts})) + '\n\n'
 
     message_texts.append(message_text)
@@ -540,6 +544,7 @@ def get_users(event: Optional[Event] = None, args: Optional[List[str]] = None) -
             ID=event.user_id,
             message=message_text
         )
+        time.sleep(settings.DELAY)
 
     # Завершение работы в БД
     session.commit()
