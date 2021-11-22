@@ -217,11 +217,11 @@ def start():
                         # update_user_step "{user.chat_id} | {user.domain}" "{step.number} | {step.name}"
                         elif command == 'update_user_step':
                             response = handler.update_user_step(event, args)
-                        #
-                        # # get_commands
-                        # elif command == 'get_commands':
-                        #     response = handler.get_commands(event, args)
-                        #
+
+                        # get_commands
+                        elif command == 'get_commands':
+                            response = handler.get_commands(event, args)
+
                         # # update_user_admin "{user.domain}" "{user.admin}"
                         # elif command == 'update_user_admin':
                         #     response = handler.update_user_admin(event, args)

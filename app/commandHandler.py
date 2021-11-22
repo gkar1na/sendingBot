@@ -14,6 +14,7 @@ import sending as send
 import add
 import vkSend
 import update
+import get
 
 
 class Handler:
@@ -58,68 +59,11 @@ class Handler:
         self.session.close()
         return result_code
 
-#
-# # args = [quantity]
-# def get_commands(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
-#     # Подключение к БД
-#     session = get_session(engine)
-#
-#     admin = session.query(User).filter_by(chat_id=event.user_id).first().admin
-#
-#     if admin:
-#         params = {}
-#     else:
-#         params = {'admin': False}
-#
-#     commands = [
-#         {
-#             'name': command.name,
-#             'arguments': json.loads(command.arguments)
-#         } for command in session.query(Command).filter_by(**params)
-#     ]
-#
-#     if args:
-#         if args[0].isdigit():
-#             params['quantity'] = int(args[0])
-#         else:
-#             return 9
-#
-#     if params and params['quantity'] < len(commands):
-#         # commands = sorted(commands, key=lambda i: i['date'], reverse=True)[:params['quantity']]
-#         commands = commands[:params['quantity']]
-#
-#     commands = sorted(commands, key=lambda i: i['name'])
-#
-#     message_texts = []
-#
-#     if not commands:
-#         message_text = 'У вас нет доступных команд.'
-#
-#     else:
-#         message_text = ''
-#         for i, command in enumerate(commands):
-#             if i and i % 50 == 0:
-#                 message_texts.append(message_text)
-#                 message_text = ''
-#             message_text += f'\n{i + 1}) !{command["name"]}'
-#             for arg in command['arguments']:
-#                 message_text += f' <{arg}>'
-#
-#     message_texts.append(message_text)
-#     for message_text in message_texts:
-#         send.message(
-#             vk=vk,
-#             ID=event.user_id,
-#             message=message_text
-#         )
-#
-#     # Завершение работы в БД
-#     session.commit()
-#     session.close()
-#
-#     return 0
-#
-#
+    def get_commands(self, event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
+        result_code = get.command_entries(self.vk, self.session, event, args)
+        self.session.close()
+        return result_code
+
 # # args = [{user.domain}, {user.admin]
 # def update_user_admin(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
 #     if len(args) < 2 or not args[0] or not args[1]:
