@@ -1,26 +1,21 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from vk_api.longpoll import Event, VkLongPoll
+from vk_api.longpoll import Event
 import vk_api
 from typing import List, Optional
 from datetime import datetime
-import json
-from sqlalchemy import desc, asc
 from sqlalchemy.orm import Session
-from validate_email import validate_email
-from sheetsParser import Spreadsheet
 
-from config import settings
-from create_tables import get_session, engine, Text, User, Step, Command, Attachment
+from create_tables import Text, Attachment
 import sending as send
 
 
 # args = [text.title]
 def title_entry(vk: vk_api.vk_api.VkApiMethod,
-          session: Session,
-          event: Optional[Event] = None,
-          args: Optional[List[str]] = None) -> int:
+                session: Session,
+                event: Optional[Event] = None,
+                args: Optional[List[str]] = None) -> int:
     """ The function of adding a text title to the Text table in DB.
 
     :param vk: session for connecting to VK API
@@ -78,21 +73,17 @@ def attachment_entry(vk: vk_api.vk_api.VkApiMethod,
             params = {'name': f'{attach_type}{attach_owner_id}_{attach_id}'}
 
         if session.query(Attachment).filter_by(**params).first():
-            send.message(
-                vk=vk,
-                ID=event.user_id,
-                message=f'{params["name"]}',
-                attachment=params['name']
-            )
+            send.message(vk=vk,
+                         ID=event.user_id,
+                         message=f'{params["name"]}',
+                         attachment=params['name'])
             continue
 
         session.add(Attachment(**params))
-        send.message(
-            vk=vk,
-            ID=event.user_id,
-            message=params['name'],
-            attachment=params['name']
-        )
+        send.message(vk=vk,
+                     ID=event.user_id,
+                     message=params['name'],
+                     attachment=params['name'])
 
     session.commit()
     return 0

@@ -12,6 +12,7 @@ from config import settings
 from create_tables import get_session, engine, Text, User, Step, Command, Attachment
 import sending as send
 import add
+import vkSend
 
 
 class Handler:
@@ -31,51 +32,10 @@ class Handler:
         self.session.close()
         return result_code
 
-
-# args = [text.title, None | step.name | step.numbed]
-def send_message(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
-    if not args or not args[0]:
-        return 1
-
-    # Подключение к БД
-    session = get_session(engine)
-
-    params = {'title': args[0]}
-    text = session.query(Text).filter_by(**params).first()
-
-    if text:
-        params = {}
-        if len(args) > 1 and args[1].isdigit():
-            params['step'] = int(args[1])
-        elif len(args) > 1 and args[1]:
-            params['step'] = session.query(Step).filter_by(name=args[1]).first().number
-        elif text.step.isdigit():
-            params['step'] = text.step
-
-        for user in session.query(User).filter_by(**params):
-            texts = json.loads(user.texts)
-
-            if text.text_id not in texts:
-                send.message(
-                    vk=vk,
-                    ID=user.chat_id,
-                    message=text.text,
-                    attachment=text.attachment
-                )
-                texts.append(text.text_id)
-                user.texts = json.dumps(texts)
-
-    else:
-        # Завершение работы в БД
-        session.close()
-
-        return 2
-
-    # Завершение работы в БД
-    session.commit()
-    session.close()
-
-    return 0
+    def send_message(self, event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
+        result_code = vkSend.messages(self.vk, self.session, event, args)
+        self.session.close()
+        return result_code
 
 
 # args = [{text.title}, {text.text}]
