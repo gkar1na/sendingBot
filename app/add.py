@@ -38,8 +38,8 @@ def title_entry(vk: vk_api.vk_api.VkApiMethod,
         return 3
 
     session.add(Text(title=params['title'], date=datetime.now()))
-    session.commit()
 
+    session.commit()
     return 0
 
 
@@ -67,19 +67,14 @@ def attachment_entry(vk: vk_api.vk_api.VkApiMethod,
             attach_owner_id = attachment[attach_type]['owner_id']
             attach_id = attachment[attach_type]['id']
             attach_access_key = attachment[attach_type]['access_key']
-
             params = {'name': f'{attach_type}{attach_owner_id}_{attach_id}_{attach_access_key}'}
-
         elif attach_type == 'wall':
             attach_from_id = attachment[attach_type]['from_id']
             attach_id = attachment[attach_type]['id']
-
             params = {'name': f'{attach_type}{attach_from_id}_{attach_id}'}
-
         elif attach_type == 'audio':
             attach_owner_id = attachment[attach_type]['owner_id']
             attach_id = attachment[attach_type]['id']
-
             params = {'name': f'{attach_type}{attach_owner_id}_{attach_id}'}
 
         if session.query(Attachment).filter_by(**params).first():
@@ -89,11 +84,9 @@ def attachment_entry(vk: vk_api.vk_api.VkApiMethod,
                 message=f'{params["name"]}',
                 attachment=params['name']
             )
-
             continue
 
         session.add(Attachment(**params))
-
         send.message(
             vk=vk,
             ID=event.user_id,
@@ -101,8 +94,5 @@ def attachment_entry(vk: vk_api.vk_api.VkApiMethod,
             attachment=params['name']
         )
 
-    # Завершение работы в БД
     session.commit()
-    session.close()
-
     return 0

@@ -32,7 +32,6 @@ class Handler:
         return result_code
 
 
-
 # args = [text.title, None | step.name | step.numbed]
 def send_message(event: Optional[Event] = None, args: Optional[List[str]] = None) -> int:
     if not args or not args[0]:
