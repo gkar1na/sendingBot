@@ -3,6 +3,7 @@
 .gitignore___jb_old___
 */__pycache__/*
 *.py___jb_old___
+*.DS_Store
 
 ========== attachments ==========
 attachments/*
