@@ -33,7 +33,7 @@ def messages(vk: vk_api.vk_api.VkApiMethod,
     text = session.query(Text).filter_by(**params).first()
     if not text:
         return 2
-    if not text.text:
+    if not text.text and not text.attachments:
         return 10
 
     params = {}
@@ -50,10 +50,12 @@ def messages(vk: vk_api.vk_api.VkApiMethod,
     for user in session.query(User).filter_by(**params):
         texts = json.loads(user.texts)
         if text.text_id not in texts:
-            send.message(vk=vk,
-                         ID=user.chat_id,
-                         message=text.text,
-                         attachment=text.attachment)
+            send.message(
+                vk=vk,
+                chat_id=user.chat_id,
+                text=text.text,
+                attachments=json.loads(text.attachments)
+            )
             texts.append(text.text_id)
             user.texts = json.dumps(texts)
 
@@ -81,10 +83,11 @@ def unreceived_messages(vk: vk_api.vk_api.VkApiMethod,
         user_texts = set(json.loads(user.texts))
         for text in texts:
             if text.text_id not in user_texts and text.step and text.step <= user.step:
-                send.message(vk=vk,
-                             ID=user.chat_id,
-                             message=text.text,
-                             attachment=text.attachment)
+                send.message(
+                    vk=vk,
+                    chat_id=user.chat_id,
+                    text=text.text,
+                    attachments=json.loads(text.attachments))
                 user_texts.add(text.text_id)
         user.texts = json.dumps(list(user_texts))
         session.commit()

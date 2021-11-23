@@ -6,6 +6,7 @@ import vk_api
 from typing import List, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
+import json
 
 from create_tables import Text, Attachment
 import sending as send
@@ -73,17 +74,60 @@ def attachment_entry(vk: vk_api.vk_api.VkApiMethod,
             params = {'name': f'{attach_type}{attach_owner_id}_{attach_id}'}
 
         if session.query(Attachment).filter_by(**params).first():
-            send.message(vk=vk,
-                         ID=event.user_id,
-                         message=f'{params["name"]}',
-                         attachment=params['name'])
+            send.message(
+                vk=vk,
+                chat_id=event.user_id,
+                text=f'{params["name"]}',
+                attachments=[params['name']]
+            )
             continue
 
         session.add(Attachment(**params))
-        send.message(vk=vk,
-                     ID=event.user_id,
-                     message=params['name'],
-                     attachment=params['name'])
+        send.message(
+            vk=vk,
+            chat_id=event.user_id,
+            text=params['name'],
+            attachments=[params['name']]
+        )
+
+    session.commit()
+    return 0
+
+
+# args = [{text.title}, {text.attachments}]
+def text_attachments(vk: vk_api.vk_api.VkApiMethod,
+                     session: Session,
+                     event: Optional[Event] = None,
+                     args: Optional[List[str]] = None) -> int:
+    """ The function of adding an attachment IDs to the Text table in DB.
+
+    :param vk: session for connecting to VK API
+    :param session: session to connect to the database
+    :param event: event object in VK
+    :param args: arguments of the command entered
+
+    :return: error number or 0
+    """
+    if len(args) < 2 or not args[0] or not args[1]:
+        return 1
+
+    params = {'title': args[0]}
+
+    text = session.query(Text).filter_by(**params).first()
+    if not text:
+        return 2
+
+    existing_attachments = {attachment.name for attachment in session.query(Attachment)}
+    attachments = [] if not text.attachments else json.loads(text.attachments)
+
+    for attachment in args[1].split(', '):
+        if attachment in existing_attachments:
+            if attachment not in attachments:
+                attachments.append(attachment)
+        else:
+            return 8
+
+    text.attachments = json.dumps(attachments)
 
     session.commit()
     return 0

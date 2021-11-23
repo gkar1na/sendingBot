@@ -15,7 +15,7 @@ def text_cells(spreadsheet: Spreadsheet, texts: Query):
                 ['step'] + [text.step for text in texts],
                 ['title'] + [text.title for text in texts],
                 ['text'] + [text.text for text in texts],
-                ['attachment'] + [text.attachment for text in texts],
+                ['attachment'] + [text.attachments for text in texts],
                 ['date'] + [text.date.strftime("%d/%m/%Y %H:%M:%S") if text.date else None for text in texts]],
         major_dimension='COLUMNS')
 

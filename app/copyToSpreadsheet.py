@@ -45,9 +45,11 @@ def text_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     updateSheet.text_cells(spreadsheet, session.query(Text))
 
-    send.message(vk=vk,
-                 ID=event.user_id,
-                 message=spreadsheet.get_sheet_url())
+    send.message(
+        vk=vk,
+        chat_id=event.user_id,
+        text=spreadsheet.get_sheet_url()
+    )
 
     session.commit()
     return 0
@@ -84,9 +86,11 @@ def user_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     updateSheet.user_cells(spreadsheet, session.query(User))
 
-    send.message(vk=vk,
-                 ID=event.user_id,
-                 message=spreadsheet.get_sheet_url())
+    send.message(
+        vk=vk,
+        chat_id=event.user_id,
+        text=spreadsheet.get_sheet_url()
+    )
 
     session.commit()
     return 0
@@ -123,9 +127,11 @@ def step_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     updateSheet.step_cells(spreadsheet, session.query(Step))
 
-    send.message(vk=vk,
-                 ID=event.user_id,
-                 message=spreadsheet.get_sheet_url())
+    send.message(
+        vk=vk,
+        chat_id=event.user_id,
+        text=spreadsheet.get_sheet_url()
+    )
 
     session.commit()
     return 0
@@ -162,9 +168,11 @@ def attachment_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     updateSheet.attachment_cells(spreadsheet, session.query(Attachment))
 
-    send.message(vk=vk,
-                 ID=event.user_id,
-                 message=spreadsheet.get_sheet_url())
+    send.message(
+        vk=vk,
+        chat_id=event.user_id,
+        text=spreadsheet.get_sheet_url()
+    )
 
     session.commit()
     return 0
@@ -201,9 +209,11 @@ def command_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     updateSheet.command_sells(spreadsheet, session.query(Command))
 
-    send.message(vk=vk,
-                 ID=event.user_id,
-                 message=spreadsheet.get_sheet_url())
+    send.message(
+        vk=vk,
+        chat_id=event.user_id,
+        text=spreadsheet.get_sheet_url()
+    )
 
     session.commit()
     return 0
@@ -211,9 +221,9 @@ def command_from_db(vk: vk_api.vk_api.VkApiMethod,
 
 # args = [email]
 def all_from_db(vk: vk_api.vk_api.VkApiMethod,
-         session: Session,
-         event: Optional[Event] = None,
-         args: Optional[List[str]] = None) -> int:
+                session: Session,
+                event: Optional[Event] = None,
+                args: Optional[List[str]] = None) -> int:
     """ The function of creating a spreadsheet with data from all tables in DB.
 
     :param vk: session for connecting to VK API
@@ -242,9 +252,11 @@ def all_from_db(vk: vk_api.vk_api.VkApiMethod,
     spreadsheet.add_sheet(sheet_title='Attachment')
     updateSheet.attachment_cells(spreadsheet, session.query(Attachment))
 
-    send.message(vk=vk,
-                 ID=event.user_id,
-                 message=spreadsheet.get_spreadsheet_url())
+    send.message(
+        vk=vk,
+        chat_id=event.user_id,
+        text=spreadsheet.get_spreadsheet_url()
+    )
 
     session.commit()
     return 0

@@ -1,19 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from vk_api.longpoll import Event, VkLongPoll
+from vk_api.longpoll import Event
 import vk_api
 from typing import List, Optional
-from datetime import datetime
 import json
-from sqlalchemy import desc, asc
-from validate_email import validate_email
-from sheetsParser import Spreadsheet
-import time
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from config import settings
-from create_tables import get_session, engine, Text, User, Step, Command, Attachment
+from create_tables import Text, User, Step, Command
 import sending as send
 
 
@@ -66,9 +61,11 @@ def command_entries(vk: vk_api.vk_api.VkApiMethod,
 
     message_texts.append(message_text)
     for message_text in message_texts:
-        send.message(vk=vk,
-                     ID=event.user_id,
-                     message=message_text)
+        send.message(
+            vk=vk,
+            chat_id=event.user_id,
+            text=message_text
+        )
 
     session.commit()
     return 0
@@ -98,7 +95,7 @@ def text_entries(vk: vk_api.vk_api.VkApiMethod,
     texts = [{
         'title': text.title,
         'step': text.step,
-        'attachment': text.attachment,
+        'attachment': text.attachments,
         'text': text.text,
         'date': text.date
     } for text in session.query(Text).filter(Text.date != None)]
@@ -122,9 +119,11 @@ def text_entries(vk: vk_api.vk_api.VkApiMethod,
 
     message_texts.append(message_text)
     for message_text in message_texts:
-        send.message(vk=vk,
-                     ID=event.user_id,
-                     message=message_text)
+        send.message(
+            vk=vk,
+            chat_id=event.user_id,
+            text=message_text
+        )
 
     session.commit()
     return 0
@@ -173,9 +172,10 @@ def step_entries(vk: vk_api.vk_api.VkApiMethod,
 
     message_texts.append(message_text)
     for message_text in message_texts:
-        send.message(vk=vk,
-                     ID=event.user_id,
-                     message=message_text)
+        send.message(
+            vk=vk,
+            chat_id=event.user_id,
+            text=message_text)
 
     session.commit()
     return 0
@@ -224,16 +224,18 @@ def user_entries(vk: vk_api.vk_api.VkApiMethod,
                 message_text += '- Нет полученных текстов.\n\n'
             else:
                 message_text += '- Полученные тексты - '
-                for i, text in enumerate(texts):
+                for j, text in enumerate(texts):
                     if text not in titles.keys():
-                        texts.pop(i)
+                        texts.pop(j)
                 message_text += '; '.join(sorted({f'"{titles[text]}"' for text in texts})) + '\n\n'
 
     message_texts.append(message_text)
     for message_text in message_texts:
-        send.message(vk=vk,
-                     ID=event.user_id,
-                     message=message_text)
+        send.message(
+            vk=vk,
+            chat_id=event.user_id,
+            text=message_text
+        )
 
     session.commit()
     return 0

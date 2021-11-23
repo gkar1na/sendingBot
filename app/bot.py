@@ -113,13 +113,15 @@ def start():
                                     f'chat_id="{event.user_id}", '
                                     f'link=vk.com/{user_info["domain"]}')
 
-                        text_welcome = json.loads(session.query(Text).filter_by(title=settings.TITLE_WELCOME).first())
+                        text_welcome = session.query(Text).filter_by(title=settings.TITLE_WELCOME).first()
                         if text_welcome:
+                            text_welcome_attachments = [] if not text_welcome.attachments \
+                                else json.loads(text_welcome.attachments)
                             sending.message(
                                 vk=vk,
                                 chat_id=event.user_id,
                                 text=text_welcome.text,
-                                attachments=text_welcome.attachments
+                                attachments=text_welcome_attachments
                             )
                             texts = json.loads(user.texts)
                             texts.append(text_welcome.text_id)
@@ -208,22 +210,21 @@ def start():
                         elif command == 'update_text':
                             response = handler.update_text(event, args)
 
-                        # update_attachment "{text.title}" "{text.attachment}"
+                        # update_attachment "{text.title}" "{text.attachments}"
                         elif command == 'update_attachment':
                             response = handler.update_attachment(event, args)
 
-                        # TODO by new structure
-                        # # add_attachment "{text.title}" "{text.attachments}"
-                        # elif command == 'add_attachments':
-                        #     response = commandHandler.add_attachments(event, args)
-                        #
-                        # # delete_attachments_by_id "{text.title}" "{text.attachments}"
-                        # elif command == 'delete_attachments_by_id':
-                        #     response = commandHandler.delete_attachments_by_id(event, args)
-                        #
-                        # # delete_attachments "{text.title}"
-                        # elif command == 'delete_attachments':
-                        #     response = commandHandler.delete_attachments(event, args)
+                        # add_text_attachments "{text.title}" "{text.attachments}"
+                        elif command == 'add_text_attachments':
+                            response = handler.add_text_attachments(event, args)
+
+                        # delete_text_attachments "{text.title}" "{text.attachments}"
+                        elif command == 'delete_text_attachments':
+                            response = handler.delete_text_attachments(event, args)
+
+                        # delete_attachments "{text.title}"
+                        elif command == 'clear_text_attachments':
+                            response = handler.clear_text_attachments(event, args)
 
                         # update_text_step "{text.title}" "{step.number} | {step.name}"
                         elif command == 'update_text_step':

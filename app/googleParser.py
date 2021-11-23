@@ -66,9 +66,9 @@ def start(vk):
 
                                 send.message(
                                     vk=vk,
-                                    ID=user.chat_id,
-                                    message=text.text,
-                                    attachment=text.attachment
+                                    chat_id=user.chat_id,
+                                    text=text.text,
+                                    attachments=text.attachments
                                 )
 
                                 user.step = 2
@@ -80,8 +80,8 @@ def start(vk):
 
                                 send.message(
                                     vk=vk,
-                                    ID=settings.MY_VK_ID,
-                                    message=f'Пользователь vk.com/{person["domain"]} зарегистрировался.'
+                                    chat_id=settings.MY_VK_ID,
+                                    text=f'Пользователь vk.com/{person["domain"]} зарегистрировался.'
                                 )
 
                                 logger.info(f'Пользователь vk.com/{person["domain"]} зарегистрировался.')
@@ -118,9 +118,9 @@ def start(vk):
                             if user.step == 2:
                                 send.message(
                                     vk=vk,
-                                    ID=user.chat_id,
-                                    message=text.text,
-                                    attachment=text.attachment
+                                    chat_id=user.chat_id,
+                                    text=text.text,
+                                    attachments=text.attachments
                                 )
 
                                 user.step = 3
@@ -132,8 +132,8 @@ def start(vk):
 
                                 send.message(
                                     vk=vk,
-                                    ID=settings.MY_VK_ID,
-                                    message=f'Пользователь vk.com/{person["domain"]} зарегистрировался на практику.'
+                                    chat_id=settings.MY_VK_ID,
+                                    text=f'Пользователь vk.com/{person["domain"]} зарегистрировался на практику.'
                                 )
 
                                 logger.info(f'Пользователь vk.com/{person["domain"]} зарегистрировался на практику.')

@@ -38,7 +38,7 @@ def text_entry(vk: vk_api.vk_api.VkApiMethod,
     return 0
 
 
-# args = [{text.title}, {text.attachment}]
+# args = [{text.title}, {text.attachments}]
 def text_attachment_entry(vk: vk_api.vk_api.VkApiMethod,
                           session: Session,
                           event: Optional[Event] = None,
@@ -63,7 +63,7 @@ def text_attachment_entry(vk: vk_api.vk_api.VkApiMethod,
     attach_params = {'name': args[1]}
     if not session.query(Attachment).filter_by(**attach_params).first():
         return 8
-    text.attachment = attach_params['name']
+    text.attachments = attach_params['name']
 
     session.commit()
     return 0
