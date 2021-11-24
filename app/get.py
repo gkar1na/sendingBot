@@ -26,7 +26,7 @@ def command_entries(vk: vk_api.vk_api.VkApiMethod,
 
     :return: error number or 0
     """
-    if session.query(User).filter_by(chat_id=event.user_id).first().admin:
+    if session.query(User).filter_by(chat_id=event.message['from_id']).first().admin:
         params = {}
     else:
         params = {'admin': False}
@@ -63,7 +63,7 @@ def command_entries(vk: vk_api.vk_api.VkApiMethod,
     for message_text in message_texts:
         send.message(
             vk=vk,
-            chat_id=event.user_id,
+            chat_id=event.message['from_id'],
             text=message_text
         )
 
@@ -121,7 +121,7 @@ def text_entries(vk: vk_api.vk_api.VkApiMethod,
     for message_text in message_texts:
         send.message(
             vk=vk,
-            chat_id=event.user_id,
+            chat_id=event.message['from_id'],
             text=message_text
         )
 
@@ -174,7 +174,7 @@ def step_entries(vk: vk_api.vk_api.VkApiMethod,
     for message_text in message_texts:
         send.message(
             vk=vk,
-            chat_id=event.user_id,
+            chat_id=event.message['from_id'],
             text=message_text)
 
     session.commit()
@@ -202,7 +202,7 @@ def user_entries(vk: vk_api.vk_api.VkApiMethod,
             return 9
         params['quantity'] = int(args[0])
 
-    users = session.query(User).filter(User.chat_id != event.user_id)
+    users = session.query(User).filter(User.chat_id != event.message['from_id'])
     if params and 'quantity' in params.keys() and params['quantity'] < users.count():
         users = users.order_by(desc(User.date)).limit(params['quantity'])
 
@@ -233,7 +233,7 @@ def user_entries(vk: vk_api.vk_api.VkApiMethod,
     for message_text in message_texts:
         send.message(
             vk=vk,
-            chat_id=event.user_id,
+            chat_id=event.message['from_id'],
             text=message_text
         )
 

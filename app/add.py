@@ -53,10 +53,10 @@ def attachment_entry(vk: vk_api.vk_api.VkApiMethod,
 
     :return: error number or 0
     """
-    if not event.attachments:
+    if not event.message['attachments']:
         return 7
 
-    for attachment in vk.messages.getById(message_ids=[event.message_id])['items'][0]['attachments']:
+    for attachment in vk.messages.getById(message_ids=[event.message['id']])['items'][0]['attachments']:
         params = {}
         attach_type = attachment['type']
         if attach_type in {'photo', 'video', 'doc'}:
@@ -76,7 +76,7 @@ def attachment_entry(vk: vk_api.vk_api.VkApiMethod,
         if session.query(Attachment).filter_by(**params).first():
             send.message(
                 vk=vk,
-                chat_id=event.user_id,
+                chat_id=event.message['from_id'],
                 text=f'{params["name"]}',
                 attachments=[params['name']]
             )
@@ -85,7 +85,7 @@ def attachment_entry(vk: vk_api.vk_api.VkApiMethod,
         session.add(Attachment(**params))
         send.message(
             vk=vk,
-            chat_id=event.user_id,
+            chat_id=event.message['from_id'],
             text=params['name'],
             attachments=[params['name']]
         )

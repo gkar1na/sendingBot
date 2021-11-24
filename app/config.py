@@ -4,9 +4,10 @@ from typing import Optional
 
 class Settings(BaseSettings):
     """ Instance stores all app settings, mainly environment variables """
-    PROJECT_NAME: str = 'MovementAcademy'
+    PROJECT_NAME: str = 'ANTIPOSVYAT'
 
     VK_BOT_TOKEN: Optional[str]
+    GROUP_ID: Optional[str]
 
     STEPS: Optional[str]
     COMMANDS: Optional[str]
@@ -26,11 +27,11 @@ class Settings(BaseSettings):
     GOOGLE_FOLDER_ID: Optional[str]
 
     class Config:
-        env_prefix = 'MOVEMENT_ACADEMY_'
-        env_file = '.env'
+        env_prefix = 'ANTIPOSVYAT_'
+        env_file = r'C:\Users\user\PycharmProjects\sendingBot\app\.env'
         env_file_encoding = 'utf-8'
 
-        # uncomment when testing
+        #uncomment when testing
         env_prefix = 'TEST_' + env_prefix
 
 
