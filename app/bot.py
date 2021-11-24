@@ -1,6 +1,6 @@
 import subprocess
 import sys
-from vk_api.longpoll import VkLongPoll, VkEventType
+from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 import vk_api
 import time
 from datetime import datetime
@@ -16,7 +16,7 @@ import commandHandler
 
 # Подключение к сообществу
 vk_session = vk_api.VkApi(token=settings.VK_BOT_TOKEN)
-longpoll = VkLongPoll(vk_session)
+longpoll = VkBotLongPoll(vk=vk_session, group_id=settings.GROUP_ID)
 vk = vk_session.get_api()
 
 
@@ -86,19 +86,19 @@ def start():
             for event in longpoll.listen():
 
                 # Если пришло новое сообщение сообществу:
-                if event.type == VkEventType.MESSAGE_NEW and event.to_me and event.from_user:
-                    logger.info(f'Получено сообщение от chat_id="{event.user_id}": "{event.text}"')
+                if event.type == VkBotEventType.MESSAGE_NEW and event.from_user:
+                    logger.info(f'Получено сообщение от chat_id="{event.message["from_id"]}": "{event.message["text"]}"')
 
                     # Подключение к БД
                     session = get_session(engine)
 
                     # Добавление нового пользователя в БД и отправка приветственного сообщения, если пользователь новый
-                    if event.user_id not in {i[0] for i in session.query(User.chat_id).all()}:
+                    if event.message['from_id'] not in {i[0] for i in session.query(User.chat_id).all()}:
                         # Получение информации о пользователе
-                        user_info = vk.users.get(user_id=event.user_id, fields='domain')
+                        user_info = vk.users.get(user_id=event.message['from_id'], fields='domain')
                         user_info = user_info[0]
                         user = User(
-                            chat_id=event.user_id,
+                            chat_id=event.message['from_id'],
                             domain=user_info['domain'],
                             first_name=user_info['first_name'],
                             last_name=user_info['last_name'],
@@ -110,7 +110,7 @@ def start():
                         )
                         session.add(user)
                         logger.info(f'Добавлен пользователь: '
-                                    f'chat_id="{event.user_id}", '
+                                    f'chat_id="{event.message["from_id"]}", '
                                     f'link=vk.com/{user_info["domain"]}')
 
                         text_welcome = session.query(Text).filter_by(title=settings.TITLE_WELCOME).first()
@@ -119,7 +119,7 @@ def start():
                                 else json.loads(text_welcome.attachments)
                             sending.message(
                                 vk=vk,
-                                chat_id=event.user_id,
+                                chat_id=event.message['from_id'],
                                 text=text_welcome.text,
                                 attachments=text_welcome_attachments
                             )
@@ -131,14 +131,14 @@ def start():
                         sending.message(
                             vk=vk,
                             chat_id=settings.MY_VK_ID,
-                            text=f'Пользователь vk.com/{user_info["domain"]} ({event.user_id}) написал боту.'
+                            text=f'Пользователь vk.com/{user_info["domain"]} ({event.message["from_id"]}) написал боту.'
                         )
 
                     # Сохранение возможных изменений в БД
                     session.commit()
 
                     # Если в полученном сообщении нет текста, то игнорировать
-                    if not event.text:
+                    if not event.message['text']:
 
                         # Завершение работы с БД
                         session.close()
@@ -149,7 +149,7 @@ def start():
                         continue
 
                     # Если ввели текстовое сообщение, то игнорировать:
-                    if event.text[0] not in {'/', '!', '.'}:
+                    if event.message['text'][0] not in {'/', '!', '.'}:
 
                         # Завершение работы с БД
                         session.commit()
@@ -161,33 +161,33 @@ def start():
                         continue
 
                     # Разделение текста сообщения на команду
-                    words = list(map(str, event.text.split()))
+                    words = list(map(str, event.message['text'].split()))
                     command = words[0][1:].lower()
-                    logger.info(f'user_id="{event.user_id}" вызвал команду "{command}"')
+                    logger.info(f'user_id="{event.message["from_id"]}" вызвал команду "{command}"')
 
                     # Если ввели несуществующую команду:
                     if not session.query(Command).filter_by(name=command).first():
                         sending.message(
                             vk=vk,
-                            chat_id=event.user_id,
+                            chat_id=event.message['from_id'],
                             text='Такой команды не существует.'
                         )
 
                         continue
 
                     # Если есть необходимые права:
-                    if (session.query(User).filter_by(chat_id=event.user_id).first().admin or
+                    if (session.query(User).filter_by(chat_id=event.message['from_id']).first().admin or
                             not session.query(Command).filter_by(name=command).first().admin):
 
                         # Отправить подтверждение начала выполнения команды
                         sending.message(
                             vk=vk,
-                            chat_id=event.user_id,
+                            chat_id=event.message['from_id'],
                             text=f'Вызвана команда:\n{command}. Начинаю выполнять...'
                         )
 
                         # Разделение текста сообщения на аргументы команды, если они введены
-                        args = re.findall('&lt;(.*?)&gt;', event.text, re.DOTALL)
+                        args = re.findall('<(.*?)>', event.message['text'], re.DOTALL)
 
                         # Обработчик команд:
                         response = -1
@@ -290,7 +290,7 @@ def start():
                             # Отправить уведомление о некорректном завершении работы команды
                             sending.message(
                                 vk=vk,
-                                chat_id=event.user_id,
+                                chat_id=event.message['from_id'],
                                 text=f'=== Команда "{command}" не выполнена. ===\n'
                                      f'{errors[response]}\n'
                                      f'========================================='
@@ -308,7 +308,7 @@ def start():
                         # Отправить уведомление об успешном завершении работы команды
                         sending.message(
                             vk=vk,
-                            chat_id=event.user_id,
+                            chat_id=event.message['from_id'],
                             text='Команда успешно выполнена.'
                         )
 
@@ -323,7 +323,7 @@ def start():
                     else:
                         sending.message(
                             vk=vk,
-                            chat_id=event.user_id,
+                            chat_id=event.message['from_id'],
                             text=f'Недостаточно прав.'
                         )
 
