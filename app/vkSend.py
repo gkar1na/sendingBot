@@ -80,14 +80,14 @@ def unreceived_messages(vk: vk_api.vk_api.VkApiMethod,
     users = session.query(User)
     texts = session.query(Text)
     for user in users:
-        user_texts = set(json.loads(user.texts))
+        user_texts = set([] if not user.texts else json.loads(user.texts))
         for text in texts:
             if text.text_id not in user_texts and text.step and text.step <= user.step:
                 send.message(
                     vk=vk,
                     chat_id=user.chat_id,
                     text=text.text,
-                    attachments=json.loads(text.attachments))
+                    attachments=[] if not text.attachments else json.loads(text.attachments))
                 user_texts.add(text.text_id)
         user.texts = json.dumps(list(user_texts))
         session.commit()
