@@ -47,7 +47,7 @@ def text_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     send.message(
         vk=vk,
-        chat_id=event.user_id,
+        chat_id=event.message['from_id'],
         text=spreadsheet.get_sheet_url()
     )
 
@@ -88,7 +88,7 @@ def user_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     send.message(
         vk=vk,
-        chat_id=event.user_id,
+        chat_id=event.message['from_id'],
         text=spreadsheet.get_sheet_url()
     )
 
@@ -129,7 +129,7 @@ def step_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     send.message(
         vk=vk,
-        chat_id=event.user_id,
+        chat_id=event.message['from_id'],
         text=spreadsheet.get_sheet_url()
     )
 
@@ -170,7 +170,7 @@ def attachment_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     send.message(
         vk=vk,
-        chat_id=event.user_id,
+        chat_id=event.message['from_id'],
         text=spreadsheet.get_sheet_url()
     )
 
@@ -211,7 +211,7 @@ def command_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     send.message(
         vk=vk,
-        chat_id=event.user_id,
+        chat_id=event.message['from_id'],
         text=spreadsheet.get_sheet_url()
     )
 
@@ -254,7 +254,7 @@ def all_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     send.message(
         vk=vk,
-        chat_id=event.user_id,
+        chat_id=event.message['from_id'],
         text=spreadsheet.get_spreadsheet_url()
     )
 
