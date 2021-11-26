@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     GOOGLE_TABLE_PATH2: Optional[str]
     GOOGLE_FOLDER_ID: Optional[str]
 
+    BASIC_BUTTONS: Optional[str]
+
     class Config:
         env_prefix = 'ANTIPOSVYAT_'
         env_file = r'C:\Users\user\PycharmProjects\sendingBot\app\.env'

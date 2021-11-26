@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from vk_api.longpoll import Event
+from vk_api.bot_longpoll import VkBotEvent
 import vk_api
 from typing import List, Optional
 import json
@@ -14,7 +14,7 @@ import sending as send
 # args = [text.title, None | step.name | step.number]
 def messages(vk: vk_api.vk_api.VkApiMethod,
              session: Session,
-             event: Optional[Event] = None,
+             event: Optional[VkBotEvent] = None,
              args: Optional[List[str]] = None) -> int:
     """ The function of launching mailing in VK.
 
@@ -66,7 +66,7 @@ def messages(vk: vk_api.vk_api.VkApiMethod,
 # args = []
 def unreceived_messages(vk: vk_api.vk_api.VkApiMethod,
                         session: Session,
-                        event: Optional[Event] = None,
+                        event: Optional[VkBotEvent] = None,
                         args: Optional[List[str]] = None) -> int:
     """ The function of launching mailing of all unreceived messages to VK.
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from vk_api.longpoll import Event
+from vk_api.bot_longpoll import VkBotEvent
 import vk_api
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -17,7 +17,7 @@ import sending as send
 # args = [email]
 def text_from_db(vk: vk_api.vk_api.VkApiMethod,
                  session: Session,
-                 event: Optional[Event] = None,
+                 event: Optional[VkBotEvent] = None,
                  args: Optional[List[str]] = None) -> int:
     """ The function of creating a spreadsheet with data from the Text table in DB.
 
@@ -58,7 +58,7 @@ def text_from_db(vk: vk_api.vk_api.VkApiMethod,
 # args = [email]
 def user_from_db(vk: vk_api.vk_api.VkApiMethod,
                  session: Session,
-                 event: Optional[Event] = None,
+                 event: Optional[VkBotEvent] = None,
                  args: Optional[List[str]] = None) -> int:
     """ The function of creating a spreadsheet with data from the User table in DB.
 
@@ -99,7 +99,7 @@ def user_from_db(vk: vk_api.vk_api.VkApiMethod,
 # args = [email]
 def step_from_db(vk: vk_api.vk_api.VkApiMethod,
                  session: Session,
-                 event: Optional[Event] = None,
+                 event: Optional[VkBotEvent] = None,
                  args: Optional[List[str]] = None) -> int:
     """ The function of creating a spreadsheet with data from the Step table in DB.
 
@@ -140,7 +140,7 @@ def step_from_db(vk: vk_api.vk_api.VkApiMethod,
 # args = [email]
 def attachment_from_db(vk: vk_api.vk_api.VkApiMethod,
                        session: Session,
-                       event: Optional[Event] = None,
+                       event: Optional[VkBotEvent] = None,
                        args: Optional[List[str]] = None) -> int:
     """ The function of creating a spreadsheet with data from the Attachment table in DB.
 
@@ -181,7 +181,7 @@ def attachment_from_db(vk: vk_api.vk_api.VkApiMethod,
 # args = [email]
 def command_from_db(vk: vk_api.vk_api.VkApiMethod,
                     session: Session,
-                    event: Optional[Event] = None,
+                    event: Optional[VkBotEvent] = None,
                     args: Optional[List[str]] = None) -> int:
     """ The function of creating a spreadsheet with data from the Command table in DB.
 
@@ -222,7 +222,7 @@ def command_from_db(vk: vk_api.vk_api.VkApiMethod,
 # args = [email]
 def all_from_db(vk: vk_api.vk_api.VkApiMethod,
                 session: Session,
-                event: Optional[Event] = None,
+                event: Optional[VkBotEvent] = None,
                 args: Optional[List[str]] = None) -> int:
     """ The function of creating a spreadsheet with data from all tables in DB.
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from vk_api.longpoll import Event
+from vk_api.bot_longpoll import VkBotEvent
 import vk_api
 from typing import List, Optional
 import json
@@ -15,7 +15,7 @@ import sending as send
 # args = [quantity]
 def command_entries(vk: vk_api.vk_api.VkApiMethod,
                     session: Session,
-                    event: Optional[Event] = None,
+                    event: Optional[VkBotEvent] = None,
                     args: Optional[List[str]] = None) -> int:
     """ The function of getting commands from the Command table in DB.
 
@@ -74,7 +74,7 @@ def command_entries(vk: vk_api.vk_api.VkApiMethod,
 # args = [quantity]
 def text_entries(vk: vk_api.vk_api.VkApiMethod,
                  session: Session,
-                 event: Optional[Event] = None,
+                 event: Optional[VkBotEvent] = None,
                  args: Optional[List[str]] = None) -> int:
     """ The function of getting texts from the Text table in DB.
 
@@ -132,7 +132,7 @@ def text_entries(vk: vk_api.vk_api.VkApiMethod,
 # args = [quantity]
 def step_entries(vk: vk_api.vk_api.VkApiMethod,
                  session: Session,
-                 event: Optional[Event] = None,
+                 event: Optional[VkBotEvent] = None,
                  args: Optional[List[str]] = None) -> int:
     """ The function of getting steps from the Step table in DB.
 
@@ -184,7 +184,7 @@ def step_entries(vk: vk_api.vk_api.VkApiMethod,
 # args = [quantity]
 def user_entries(vk: vk_api.vk_api.VkApiMethod,
                  session: Session,
-                 event: Optional[Event] = None,
+                 event: Optional[VkBotEvent] = None,
                  args: Optional[List[str]] = None) -> int:
     """ The function of getting users from the User table in DB.
 

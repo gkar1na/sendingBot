@@ -19,6 +19,7 @@ vk_session = vk_api.VkApi(token=settings.VK_BOT_TOKEN)
 longpoll = VkBotLongPoll(vk=vk_session, group_id=settings.GROUP_ID)
 vk = vk_session.get_api()
 
+# basic_buttons = json.loads(settings.BASIC_BUTTONS)
 
 def start():
     errors = {
@@ -75,8 +76,11 @@ def start():
                 )
             session.close()
 
-    #булевая переменная для отслеживания того, что была нажата "красная кнопка"
-    pushed_problem_button = False
+
+    # переменная для хранения последней отправленной клавиатуры
+    # нужна, чтобы понимать, на какой уровень вложенности возвращаться
+    # при нажатии кнопки "Назад"
+    last_keyboard = ''
 
     # Зацикливание запуска прослушки после возможных исключений
     while True:
@@ -150,24 +154,6 @@ def start():
                         time.sleep(settings.DELAY)
 
                         continue
-
-                    # отправка сообщения о проблеме от юзера главному админу
-                    if pushed_problem_button and event.message['text']:
-
-                        domain = session.query(User.domain).filter_by(chat_id=event.message['from_id']).first()
-
-                        sending.message(vk=vk,
-                                        text=f'Получено сообщение об ошибке от пользователя vk.com/{domain[0]} ' \
-                                        f'({event.message["from_id"]})' \
-                                        f'\nОписание проблемы: ' + event.message['text'],
-                                        chat_id=settings.MY_VK_ID)
-
-                        sending.message(vk=vk,
-                                        text='Уведомление об ошибке отправлено' \
-                                             '\nС вами обязательно свяжутся',
-                                        chat_id=event.message['from_id'])
-
-                        pushed_problem_button = False
 
                     elif event.message['text'] == 'Начать':
 
@@ -362,17 +348,70 @@ def start():
 
                 elif event.type == VkBotEventType.MESSAGE_EVENT:
 
-                    if event.object['payload'][0] == 'Info':
-                        sending.message(vk=vk,
-                                        chat_id=event.object['user_id'],
-                                        text='Антипосвят')
+                    pushed_button = event.object['payload'][0]
+                    chat_id = event.object['user_id']
 
-                    elif event.object['payload'][0] == 'Problem':
-
-                        pushed_problem_button = True
+                    if pushed_button == 'info':
                         sending.message(vk=vk,
-                                        chat_id=event.object['user_id'],
+                                        chat_id=chat_id,
+                                        text='Чел, это Антипосвят')
+
+                    elif pushed_button == 'problem':
+
+                        sending.message(vk=vk,
+                                        chat_id=chat_id,
                                         text='Максимально лаконично опишите свою проблему')
+
+                        for keyboard_event in longpoll.listen():
+
+                            if keyboard_event.type == VkBotEventType.MESSAGE_NEW and keyboard_event.from_user:
+
+                                domain = session.query(User.domain).filter_by(chat_id=chat_id).first()
+
+                                sending.message(vk=vk,
+                                                text=f'Получено сообщение об ошибке от пользователя vk.com/{domain[0]} ' \
+                                                     f'({chat_id})' \
+                                                     f'\nОписание проблемы: ' + keyboard_event.message['text'],
+                                                chat_id=settings.MY_VK_ID)
+
+                                sending.message(vk=vk,
+                                                text='Уведомление об ошибке отправлено' \
+                                                     '\nС вами обязательно свяжутся',
+                                                chat_id=chat_id)
+
+                                break
+
+                    # else:
+                    #
+                    #     sending.message(vk=vk,
+                    #                     text='Чтобы вернуться назад, напиши "Назад" или ' \
+                    #                          'нажми соответствующую кнопку',
+                    #                     chat_id=chat_id,
+                    #                     keyboard=basic_buttons[pushed_button]())
+
+                    # elif pushed_button == 'command_menu':
+                    #
+                    #     sending.message(vk=vk,
+                    #                     text='Чтобы вернуться назад, напиши "Назад" или ' \
+                    #                          'нажми соответствующую кнопку',
+                    #                     chat_id=chat_id,
+                    #                     keyboard=vkKeyboard.get_command_menu_keyboard())
+                    #
+                    # elif pushed_button == 'bd_commands':
+                    #
+                    #     sending.message(vk=vk,
+                    #                     text='Чтобы вернуться назад, напиши "Назад" или ' \
+                    #                          'нажми соответствующую кнопку',
+                    #                     chat_id=chat_id,
+                    #                     keyboard=vkKeyboard.get_bd_commands_keyboard())
+                    #
+                    # elif pushed_button == 'parser_commands':
+                    #
+                    #     sending.message(vk=vk,
+                    #                     text='Чтобы вернуться назад, напиши "Назад" или ' \
+                    #                          'нажми соответствующую кнопку',
+                    #                     chat_id=chat_id,
+                    #                     keyboard=vkKeyboard.get_bd_commands_keyboard())
 
                 # Задержка от спама
                 time.sleep(settings.DELAY)
