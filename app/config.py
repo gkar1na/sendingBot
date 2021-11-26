@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     GOOGLE_FOLDER_ID: Optional[str]
 
     BASIC_BUTTONS: Optional[str]
+    FUNCTIONAL_BUTTONS: Optional[str]
 
     class Config:
         env_prefix = 'ANTIPOSVYAT_'

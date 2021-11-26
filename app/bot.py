@@ -19,7 +19,15 @@ vk_session = vk_api.VkApi(token=settings.VK_BOT_TOKEN)
 longpoll = VkBotLongPoll(vk=vk_session, group_id=settings.GROUP_ID)
 vk = vk_session.get_api()
 
-# basic_buttons = json.loads(settings.BASIC_BUTTONS)
+# Загрузка кнопок, вызывающих клавиатуры ВК
+keyboard_buttons = json.loads(settings.BASIC_BUTTONS)
+
+# Загрузка кнопок, выполняющих команды
+functional_buttons = json.load(setting.FUNCTIONAL_BUTTONS)
+
+# Последняя вызванная клавиатура для того, чтобы
+# понимать, на какой уровень вложенности возвращаться
+last_keyboard = ''
 
 def start():
     errors = {
@@ -381,37 +389,15 @@ def start():
 
                                 break
 
-                    # else:
-                    #
-                    #     sending.message(vk=vk,
-                    #                     text='Чтобы вернуться назад, напиши "Назад" или ' \
-                    #                          'нажми соответствующую кнопку',
-                    #                     chat_id=chat_id,
-                    #                     keyboard=basic_buttons[pushed_button]())
+                    elif pushed_button in keyboard_buttons.keys():
 
-                    # elif pushed_button == 'command_menu':
-                    #
-                    #     sending.message(vk=vk,
-                    #                     text='Чтобы вернуться назад, напиши "Назад" или ' \
-                    #                          'нажми соответствующую кнопку',
-                    #                     chat_id=chat_id,
-                    #                     keyboard=vkKeyboard.get_command_menu_keyboard())
-                    #
-                    # elif pushed_button == 'bd_commands':
-                    #
-                    #     sending.message(vk=vk,
-                    #                     text='Чтобы вернуться назад, напиши "Назад" или ' \
-                    #                          'нажми соответствующую кнопку',
-                    #                     chat_id=chat_id,
-                    #                     keyboard=vkKeyboard.get_bd_commands_keyboard())
-                    #
-                    # elif pushed_button == 'parser_commands':
-                    #
-                    #     sending.message(vk=vk,
-                    #                     text='Чтобы вернуться назад, напиши "Назад" или ' \
-                    #                          'нажми соответствующую кнопку',
-                    #                     chat_id=chat_id,
-                    #                     keyboard=vkKeyboard.get_bd_commands_keyboard())
+                        required_keyboard = getattr(vkKeyboard,keyboard_buttons[pushed_button])
+
+                        sending.message(vk=vk,
+                                        text='Чтобы вернуться назад, напиши "Назад" или ' \
+                                             'нажми соответствующую кнопку',
+                                        chat_id=chat_id,
+                                        keyboard=required_keyboard())
 
                 # Задержка от спама
                 time.sleep(settings.DELAY)

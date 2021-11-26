@@ -119,9 +119,6 @@ def get_update_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
     keyboard.add_callback_button(label='Текст',
                                  color=VkKeyboardColor.PRIMARY,
                                  payload=['update_text'])
-    keyboard.add_callback_button(label='Вложения к тексту',
-                                 color=VkKeyboardColor.PRIMARY,
-                                 payload=['update_text_attachment'])
     keyboard.add_callback_button(label='Шаг',
                                  color=VkKeyboardColor.PRIMARY,
                                  payload=['update_step'])
@@ -129,10 +126,13 @@ def get_update_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
     keyboard.add_callback_button(label='Шаг юзера',
                                  color=VkKeyboardColor.PRIMARY,
                                  payload=['update_user_step'])
-    keyboard.add_line()
     keyboard.add_callback_button(label='Админ',
                                  color=VkKeyboardColor.PRIMARY,
                                  payload=['update_admin'])
+    keyboard.add_line()
+    keyboard.add_callback_button(label='Вложения к тексту',
+                                 color=VkKeyboardColor.PRIMARY,
+                                 payload=['update_text_attachment'])
     keyboard.add_line()
     keyboard.add_callback_button(label='Назад',
                                  color=VkKeyboardColor.NEGATIVE,
@@ -174,7 +174,7 @@ def get_delete_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
     keyboard.add_line()
     keyboard.add_callback_button(label='Все вложения к тексту',
                                  color=VkKeyboardColor.PRIMARY,
-                                 payload=['clear_text_attachmnets'])
+                                 payload=['clear_text_attachments'])
     keyboard.add_line()
     keyboard.add_callback_button(label='Назад',
                                  color=VkKeyboardColor.NEGATIVE,
@@ -186,24 +186,24 @@ def get_parser_commands_keyboard() -> vk_api.keyboard.VkKeyboard:
 
     keyboard = get_inline_keyboard()
 
-    keyboard.add_callback_button(label='Копировать тексты',
+    keyboard.add_callback_button(label='Тексты',
                                  color=VkKeyboardColor.PRIMARY,
                                  payload=['copy_text'])
-    keyboard.add_callback_button(label='Копировать юзеров',
+    keyboard.add_callback_button(label='Юзеров',
                                  color=VkKeyboardColor.PRIMARY,
                                  payload=['copy_user'])
     keyboard.add_line()
-    keyboard.add_callback_button(label='Копировать шаги',
+    keyboard.add_callback_button(label='Шаги',
                                  color=VkKeyboardColor.PRIMARY,
                                  payload=['copy_step'])
-    keyboard.add_callback_button(label='Копировать вложения',
+    keyboard.add_callback_button(label='Вложения',
                                  color=VkKeyboardColor.PRIMARY,
                                  payload=['copy_attachment'])
     keyboard.add_line()
-    keyboard.add_callback_button(label='Копировать команды',
+    keyboard.add_callback_button(label='Команды',
                                  color=VkKeyboardColor.PRIMARY,
                                  payload=['copy_command'])
-    keyboard.add_callback_button(label='Копировать всё',
+    keyboard.add_callback_button(label='Всё',
                                  color=VkKeyboardColor.PRIMARY,
                                  payload=['copy'])
     keyboard.add_line()
