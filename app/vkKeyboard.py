@@ -5,10 +5,10 @@ from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 import vk_api
 import json
 from sqlalchemy.orm import Session
-from vk_api.bot_longpoll import VkBotEvent, VkBotLongPoll, VkBotEventType
+from vk_api.bot_longpoll import VkBotEvent, VkBotEventType
 from typing import Optional
 
-from create_tables import User, Text, Command, Step, Attachment
+from create_tables import User
 import sending
 from config import settings
 
@@ -18,9 +18,11 @@ keyboard_buttons = json.loads(settings.BASIC_BUTTONS)
 # Загрузка кнопок, выполняющих команды
 functional_buttons = json.loads(settings.FUNCTIONAL_BUTTONS)
 
+
 def get_inline_keyboard() -> vk_api.keyboard.VkKeyboard:
 
     return vk_api.keyboard.VkKeyboard(inline=True)
+
 
 def get_user_keyboard() -> vk_api.keyboard.VkKeyboard:
 
@@ -40,6 +42,7 @@ def get_user_keyboard() -> vk_api.keyboard.VkKeyboard:
 
     return keyboard
 
+
 def get_admin_keyboard() -> vk_api.keyboard.VkKeyboard:
 
     keyboard = get_inline_keyboard()
@@ -47,7 +50,7 @@ def get_admin_keyboard() -> vk_api.keyboard.VkKeyboard:
     keyboard.add_callback_button(
         label='Вызов команд',
         color=VkKeyboardColor.POSITIVE,
-        payload=['command_menu']
+        payload=['get_command_menu_keyboard']
     )
     keyboard.add_line()
     keyboard.add_callback_button(
@@ -70,6 +73,7 @@ def get_admin_keyboard() -> vk_api.keyboard.VkKeyboard:
 
     return keyboard
 
+
 def get_command_menu_keyboard() -> vk_api.keyboard.VkKeyboard:
 
     keyboard = get_inline_keyboard()
@@ -77,28 +81,29 @@ def get_command_menu_keyboard() -> vk_api.keyboard.VkKeyboard:
     keyboard.add_callback_button(
         label='Команды БД',
         color=VkKeyboardColor.PRIMARY,
-        payload=['bd_commands']
+        payload=['get_bd_commands_keyboard']
     )
     keyboard.add_line()
     keyboard.add_callback_button(
         label='Команды парсера',
         color=VkKeyboardColor.PRIMARY,
-        payload=['parser_commands']
+        payload=['get_parser_commands_keyboard']
     )
     keyboard.add_line()
     keyboard.add_callback_button(
         label='Команды ВК',
         color=VkKeyboardColor.PRIMARY,
-        payload=['vk_commands']
+        payload=['get_vk_commands_keyboard']
     )
     keyboard.add_line()
     keyboard.add_callback_button(
-        label='В начало',
+        label='Назад',
         color=VkKeyboardColor.NEGATIVE,
-        payload=['beginning']
+        payload=['get_admin_keyboard']
     )
 
     return keyboard
+
 
 def get_bd_commands_keyboard() -> vk_api.keyboard.VkKeyboard:
 
@@ -107,32 +112,33 @@ def get_bd_commands_keyboard() -> vk_api.keyboard.VkKeyboard:
     keyboard.add_callback_button(
         label='Добавить',
         color=VkKeyboardColor.PRIMARY,
-        payload=['add']
+        payload=['get_add_bd_keyboard']
     )
     keyboard.add_callback_button(
         label='Обновить',
         color=VkKeyboardColor.PRIMARY,
-        payload=['update']
+        payload=['get_update_bd_keyboard']
     )
     keyboard.add_line()
     keyboard.add_callback_button(
         label='Получить',
         color=VkKeyboardColor.PRIMARY,
-        payload=['get']
+        payload=['get_get_bd_keyboard']
     )
     keyboard.add_callback_button(
         label='Удалить',
         color=VkKeyboardColor.PRIMARY,
-        payload=['delete']
+        payload=['get_delete_bd_keyboard']
     )
     keyboard.add_line()
     keyboard.add_callback_button(
-        label='В начало',
+        label='Назад',
         color=VkKeyboardColor.NEGATIVE,
-        payload=['beginning']
+        payload=['get_command_menu_keyboard']
     )
 
     return keyboard
+
 
 def get_add_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
 
@@ -157,12 +163,13 @@ def get_add_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
     )
     keyboard.add_line()
     keyboard.add_callback_button(
-        label='В начало',
+        label='Назад',
         color=VkKeyboardColor.NEGATIVE,
-        payload=['beginning']
+        payload=['get_bd_commands_keyboard']
     )
 
     return keyboard
+
 
 def get_update_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
 
@@ -197,12 +204,13 @@ def get_update_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
     )
     keyboard.add_line()
     keyboard.add_callback_button(
-        label='В начало',
+        label='Назад',
         color=VkKeyboardColor.NEGATIVE,
-        payload=['beginning']
+        payload=['get_bd_commands_keyboard']
     )
 
     return keyboard
+
 
 def get_get_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
 
@@ -231,12 +239,13 @@ def get_get_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
     )
     keyboard.add_line()
     keyboard.add_callback_button(
-        label='В начало',
+        label='Назад',
         color=VkKeyboardColor.NEGATIVE,
-        payload=['beginning']
+        payload=['get_bd_commands_keyboard']
     )
 
     return keyboard
+
 
 def get_delete_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
 
@@ -255,12 +264,13 @@ def get_delete_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
     )
     keyboard.add_line()
     keyboard.add_callback_button(
-        label='В начало',
+        label='Назад',
         color=VkKeyboardColor.NEGATIVE,
-        payload=['beginning']
+        payload=['get_bd_commands_keyboard']
     )
 
     return keyboard
+
 
 def get_parser_commands_keyboard() -> vk_api.keyboard.VkKeyboard:
 
@@ -300,12 +310,13 @@ def get_parser_commands_keyboard() -> vk_api.keyboard.VkKeyboard:
     )
     keyboard.add_line()
     keyboard.add_callback_button(
-        label='В начало',
+        label='Назад',
         color=VkKeyboardColor.NEGATIVE,
-        payload=['beginning']
+        payload=['get_command_menu_keyboard']
     )
 
     return keyboard
+
 
 def get_vk_commands_keyboard() -> vk_api.keyboard.VkKeyboard:
 
@@ -324,36 +335,50 @@ def get_vk_commands_keyboard() -> vk_api.keyboard.VkKeyboard:
     )
     keyboard.add_line()
     keyboard.add_callback_button(
-        label='В начало',
+        label='Назад',
         color=VkKeyboardColor.NEGATIVE,
-        payload=['beginning']
+        payload=['get_command_menu_keyboard']
     )
 
     return keyboard
 
+
 def required_keyboard(vk: vk_api.vk_api.VkApiMethod,
-                      session: Session,
                       keyboard: str,
-                      event: Optional[VkBotEvent] = None) -> int:
+                      event: Optional[VkBotEvent] = None,
+                      message_id: Optional[int] = None) -> int:
 
     chat_id = event.object['user_id']
-    required_keyboard = globals()[keyboard_buttons[keyboard]]
+    conversation_id = event.object['conversation_message_id']
+    required_keyboard = globals()[keyboard]
 
-    text = 'Чтобы вернуться в начало, нажми соответствующую кнопку' \
-        if keyboard != 'admin' else 'Просто нажми любую кнопку :)'
+    text = 'Чтобы вернуться назад, нажми соответствующую кнопку' \
+        if keyboard != 'get_admin_keyboard' else 'Просто нажми любую кнопку :)'
 
-    sending.message(
-        vk=vk,
-        chat_id=chat_id,
-        text=text,
-        keyboard=required_keyboard()
-    )
+    try:
+        vk.messages.edit(
+            peer_id=chat_id,
+            message=text,
+            message_id=message_id,
+            сonversation_message_id=conversation_id,
+            keyboard=required_keyboard().get_keyboard()
+        )
 
-    return 0
+    except Exception as e:
+        message_id = sending.message(
+            vk=vk,
+            chat_id=chat_id,
+            text=text,
+            keyboard=required_keyboard()
+        )
+
+    return message_id
+
 
 def info(vk: vk_api.vk_api.VkApiMethod,
          session: Session,
-         event: Optional[VkBotEvent] = None) -> int:
+         event: Optional[VkBotEvent] = None,
+         longpoll: Optional[vk_api.bot_longpoll.VkBotLongPoll] = None) -> int:
 
     chat_id = event.object['user_id']
 
@@ -364,6 +389,7 @@ def info(vk: vk_api.vk_api.VkApiMethod,
     )
 
     return 0
+
 
 def problem(vk: vk_api.vk_api.VkApiMethod,
             session: Session,
@@ -385,15 +411,15 @@ def problem(vk: vk_api.vk_api.VkApiMethod,
 
             sending.message(
                 vk=vk,
-                text=f'Получено сообщение об ошибке от пользователя vk.com/{domain[0]} ' \
-                     f'({chat_id})' \
+                text=f'Получено сообщение об ошибке от пользователя vk.com/{domain[0]} '
+                     f'({chat_id})'
                      f'\nОписание проблемы: ' + keyboard_event.message['text'],
                 chat_id=settings.MY_VK_ID
             )
 
             sending.message(
                 vk=vk,
-                text='Уведомление об ошибке отправлено' \
+                text='Уведомление об ошибке отправлено'
                      '\nС вами обязательно свяжутся',
                 chat_id=chat_id
             )

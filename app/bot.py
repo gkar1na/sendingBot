@@ -13,12 +13,13 @@ from create_tables import engine, get_session, User, Text, Command
 import sending
 import commandHandler
 import vkKeyboard
-from vkKeyboard import keyboard_buttons, functional_buttons
+from vkKeyboard import keyboard_buttons, functional_buttons, required_keyboard
 
 # Подключение к сообществу
 vk_session = vk_api.VkApi(token=settings.VK_BOT_TOKEN)
 longpoll = VkBotLongPoll(vk=vk_session, group_id=settings.GROUP_ID)
 vk = vk_session.get_api()
+
 
 def start():
     errors = {
@@ -74,12 +75,6 @@ def start():
                     text=message
                 )
             session.close()
-
-
-    # переменная для хранения последней отправленной клавиатуры
-    # нужна, чтобы понимать, на какой уровень вложенности возвращаться
-    # при нажатии кнопки "Назад"
-    last_keyboard = ''
 
     # Зацикливание запуска прослушки после возможных исключений
     while True:
@@ -154,15 +149,17 @@ def start():
 
                         continue
 
-                    elif event.message['text'] == 'Начать':
+                    elif event.message['text'] == 'Начать'\
+                            or event.message['text'] == 'начать':
 
                         admin = session.query(User.admin).filter_by(chat_id=event.message['from_id']).first()
 
-                        sending.message(vk=vk,
-                                        text='Просто нажми на нужную кнопку :)',
-                                        chat_id=event.message['from_id'],
-                                        keyboard=vkKeyboard.get_admin_keyboard() if admin \
-                                        else vkKeyboard.get_user_keyboard())
+                        message_id = sending.message(vk=vk,
+                                                     text='Просто нажми на нужную кнопку :)',
+                                                     chat_id=event.message['from_id'],
+                                                     keyboard=vkKeyboard.get_admin_keyboard() if admin
+                                                     else vkKeyboard.get_user_keyboard()
+                                                     )
 
                     else:
 
@@ -347,22 +344,24 @@ def start():
 
                 elif event.type == VkBotEventType.MESSAGE_EVENT:
 
-                    keyboard_handler = commandHandler.keyboardHandler()
-
                     pushed_button = event.object['payload'][0]
 
-                    if pushed_button in functional_buttons.keys():
+                    if pushed_button in functional_buttons:
 
-                        required_button = getattr(keyboard_handler, functional_buttons[pushed_button])
-                        response = required_button(event)
+                        required_button = getattr(vkKeyboard, pushed_button)
+                        response = required_button(vk=vk,
+                                                   session=session,
+                                                   event=event,
+                                                   longpoll=longpoll
+                                                   )
 
-                    elif pushed_button in keyboard_buttons.keys():
+                    elif pushed_button in keyboard_buttons:
 
-                        response = keyboard_handler.get_required_keyboard(pushed_button, event)
-
-                    elif pushed_button == 'beginning':
-
-                        response = keyboard_handler.get_required_keyboard('admin', event)
+                        message_id = required_keyboard(vk=vk,
+                                                       keyboard=pushed_button,
+                                                       event=event,
+                                                       message_id=message_id
+                                                       )
 
                 # Задержка от спама
                 time.sleep(settings.DELAY)

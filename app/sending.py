@@ -13,7 +13,7 @@ def message(
         chat_id: int,
         text: str,
         keyboard: Optional[vk_api.keyboard.VkKeyboard] = None,
-        attachments: Optional[List[str]] = None) -> None:
+        attachments: Optional[List[str]] = None) -> int:
     """Функция, отправляющая сообщение пользователю.
 
     :param vk: начатая сессия ВК с авторизацией в сообществе
@@ -35,9 +35,11 @@ def message(
     :rtype: None
     """
 
+    message_id = 0
+
     # Попытка отправить сообщение
     try:
-        vk.messages.send(
+        message_id = vk.messages.send(
             user_id=chat_id,
             message=text,
             attachment=attachments,
@@ -64,3 +66,5 @@ def message(
                 message=text,
                 random_id=get_random_id()
             )
+
+    return message_id
