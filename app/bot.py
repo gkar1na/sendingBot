@@ -13,21 +13,12 @@ from create_tables import engine, get_session, User, Text, Command
 import sending
 import commandHandler
 import vkKeyboard
+from vkKeyboard import keyboard_buttons, functional_buttons
 
 # Подключение к сообществу
 vk_session = vk_api.VkApi(token=settings.VK_BOT_TOKEN)
 longpoll = VkBotLongPoll(vk=vk_session, group_id=settings.GROUP_ID)
 vk = vk_session.get_api()
-
-# Загрузка кнопок, вызывающих клавиатуры ВК
-keyboard_buttons = json.loads(settings.BASIC_BUTTONS)
-
-# Загрузка кнопок, выполняющих команды
-functional_buttons = json.load(setting.FUNCTIONAL_BUTTONS)
-
-# Последняя вызванная клавиатура для того, чтобы
-# понимать, на какой уровень вложенности возвращаться
-last_keyboard = ''
 
 def start():
     errors = {
@@ -356,48 +347,22 @@ def start():
 
                 elif event.type == VkBotEventType.MESSAGE_EVENT:
 
+                    keyboard_handler = commandHandler.keyboardHandler()
+
                     pushed_button = event.object['payload'][0]
-                    chat_id = event.object['user_id']
 
-                    if pushed_button == 'info':
-                        sending.message(vk=vk,
-                                        chat_id=chat_id,
-                                        text='Чел, это Антипосвят')
+                    if pushed_button in functional_buttons.keys():
 
-                    elif pushed_button == 'problem':
-
-                        sending.message(vk=vk,
-                                        chat_id=chat_id,
-                                        text='Максимально лаконично опишите свою проблему')
-
-                        for keyboard_event in longpoll.listen():
-
-                            if keyboard_event.type == VkBotEventType.MESSAGE_NEW and keyboard_event.from_user:
-
-                                domain = session.query(User.domain).filter_by(chat_id=chat_id).first()
-
-                                sending.message(vk=vk,
-                                                text=f'Получено сообщение об ошибке от пользователя vk.com/{domain[0]} ' \
-                                                     f'({chat_id})' \
-                                                     f'\nОписание проблемы: ' + keyboard_event.message['text'],
-                                                chat_id=settings.MY_VK_ID)
-
-                                sending.message(vk=vk,
-                                                text='Уведомление об ошибке отправлено' \
-                                                     '\nС вами обязательно свяжутся',
-                                                chat_id=chat_id)
-
-                                break
+                        required_button = getattr(keyboard_handler, functional_buttons[pushed_button])
+                        response = required_button(event)
 
                     elif pushed_button in keyboard_buttons.keys():
 
-                        required_keyboard = getattr(vkKeyboard,keyboard_buttons[pushed_button])
+                        response = keyboard_handler.get_required_keyboard(pushed_button, event)
 
-                        sending.message(vk=vk,
-                                        text='Чтобы вернуться назад, напиши "Назад" или ' \
-                                             'нажми соответствующую кнопку',
-                                        chat_id=chat_id,
-                                        keyboard=required_keyboard())
+                    elif pushed_button == 'beginning':
+
+                        response = keyboard_handler.get_required_keyboard('admin', event)
 
                 # Задержка от спама
                 time.sleep(settings.DELAY)
