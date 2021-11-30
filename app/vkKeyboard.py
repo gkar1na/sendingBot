@@ -192,6 +192,20 @@ def get_add_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
 
     return keyboard
 
+# def get_add_text_keyboard():
+#
+#     keyboard = get_inline_keyboard()
+#
+#     keyboard.add_callback_button(
+#         label='Заголовок, текст, шаг',
+#         color=VkKeyboardColor.NEGATIVE,
+#         payload=['new_text',
+#                  'new_title']
+#     )
+#     keyboard.add_line()
+#     keyboard.add_callback_button(
+#         l
+#     )
 
 def get_update_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
 
@@ -302,6 +316,28 @@ def get_parser_commands_keyboard() -> vk_api.keyboard.VkKeyboard:
     keyboard = get_inline_keyboard()
 
     keyboard.add_callback_button(
+        label='Копировать из БД в таблицы',
+        color=VkKeyboardColor.PRIMARY,
+        payload=['get_bd_to_sheets_keyboard',
+                 'Теперь выберите, что вы хотите скопировать из'
+                 'БД в таблицы'
+                 '\nДля возвращения к командам парсера, нажмите кнопку "Назад"']
+    )
+    keyboard.add_line()
+    keyboard.add_callback_button(
+        label='Назад',
+        color=VkKeyboardColor.NEGATIVE,
+        payload=['get_parser_commands_keyboard']
+    )
+
+    return keyboard
+
+
+def get_bd_to_sheets_keyboard() -> vk_api.keyboard.VkKeyboard:
+
+    keyboard = get_inline_keyboard()
+
+    keyboard.add_callback_button(
         label='Тексты',
         color=VkKeyboardColor.PRIMARY,
         payload=['copy_text']
@@ -356,7 +392,7 @@ def get_vk_commands_keyboard() -> vk_api.keyboard.VkKeyboard:
     keyboard.add_line()
     keyboard.add_callback_button(
         label='Неотправленные сообщения',
-        color=VkKeyboardColor.PRIMARY,
+        color=VkKeyboardColor.NEGATIVE,
         payload=['check']
     )
     keyboard.add_line()
@@ -521,7 +557,7 @@ def problem(vk: vk_api.vk_api.VkApiMethod,
 
         if keyboard_event.type == VkBotEventType.MESSAGE_NEW and keyboard_event.from_user:
 
-            if keyboard_event.object['text'] != 'Отмена':
+            if keyboard_event.message['text'] != 'Отмена':
 
                 domain = session.query(User.domain).filter_by(chat_id=chat_id).first()
 
@@ -542,11 +578,7 @@ def problem(vk: vk_api.vk_api.VkApiMethod,
 
             else:
 
-                sending.message(
-                    vk=vk,
-                    text='Команда отменена',
-                    chat_id=chat_id
-                )
+                return -2
 
     return 0
 
@@ -579,13 +611,7 @@ def load(vk: vk_api.vk_api.VkApiMethod,
 
             elif new_event.message['text'] == 'Отмена':
 
-                sending.message(
-                    vk=vk,
-                    chat_id=new_event.message['from_id'],
-                    text='Команда отменена'
-                )
-
-                return 0
+                return -2
 
             else:
 
