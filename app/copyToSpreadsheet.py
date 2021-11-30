@@ -45,9 +45,11 @@ def text_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     updateSheet.text_cells(spreadsheet, session.query(Text))
 
+    chat_id = event.message['from_id'] if event.message\
+        else event.object['user_id']
     send.message(
         vk=vk,
-        chat_id=event.message['from_id'],
+        chat_id=chat_id,
         text=spreadsheet.get_sheet_url()
     )
 
@@ -86,9 +88,11 @@ def user_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     updateSheet.user_cells(spreadsheet, session.query(User))
 
+    chat_id = event.message['from_id'] if event.message \
+        else event.object['user_id']
     send.message(
         vk=vk,
-        chat_id=event.message['from_id'],
+        chat_id=chat_id,
         text=spreadsheet.get_sheet_url()
     )
 
@@ -127,9 +131,11 @@ def step_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     updateSheet.step_cells(spreadsheet, session.query(Step))
 
+    chat_id = event.message['from_id'] if event.message \
+        else event.object['user_id']
     send.message(
         vk=vk,
-        chat_id=event.message['from_id'],
+        chat_id=chat_id,
         text=spreadsheet.get_sheet_url()
     )
 
@@ -168,9 +174,11 @@ def attachment_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     updateSheet.attachment_cells(spreadsheet, session.query(Attachment))
 
+    chat_id = event.message['from_id'] if event.message \
+        else event.object['user_id']
     send.message(
         vk=vk,
-        chat_id=event.message['from_id'],
+        chat_id=chat_id,
         text=spreadsheet.get_sheet_url()
     )
 
@@ -209,9 +217,11 @@ def command_from_db(vk: vk_api.vk_api.VkApiMethod,
 
     updateSheet.command_sells(spreadsheet, session.query(Command))
 
+    chat_id = event.message['from_id'] if event.message \
+        else event.object['user_id']
     send.message(
         vk=vk,
-        chat_id=event.message['from_id'],
+        chat_id=chat_id,
         text=spreadsheet.get_sheet_url()
     )
 
@@ -252,9 +262,11 @@ def all_from_db(vk: vk_api.vk_api.VkApiMethod,
     spreadsheet.add_sheet(sheet_title='Attachment')
     updateSheet.attachment_cells(spreadsheet, session.query(Attachment))
 
+    chat_id = event.message['from_id'] if event.message \
+        else event.object['user_id']
     send.message(
         vk=vk,
-        chat_id=event.message['from_id'],
+        chat_id=chat_id,
         text=spreadsheet.get_spreadsheet_url()
     )
 

@@ -13,7 +13,7 @@ from create_tables import engine, get_session, User, Text, Command
 import sending
 import commandHandler
 import vkKeyboard
-from vkKeyboard import keyboard_buttons, functional_buttons, required_keyboard
+from vkKeyboard import keyboard_buttons, functional_buttons, required_keyboard, required_button
 
 # Подключение к сообществу
 vk_session = vk_api.VkApi(token=settings.VK_BOT_TOKEN)
@@ -23,6 +23,7 @@ vk = vk_session.get_api()
 
 def start():
     errors = {
+        -2: 'Команда отменена',
         -1: 'Неизвестная ошибка.',
         1: 'Недостаточно аргументов.',
         2: 'Такого текста не существует.',
@@ -149,10 +150,10 @@ def start():
 
                         continue
 
-                    elif event.message['text'] == 'Начать'\
-                            or event.message['text'] == 'начать':
+                    elif event.message['text'].lower() == 'начать'\
+                            or event.message['text'].lower() == 'клавиатура':
 
-                        admin = session.query(User.admin).filter_by(chat_id=event.message['from_id']).first()
+                        admin = session.query(User.admin).filter_by(chat_id=event.message['from_id']).first()[0]
 
                         message_id = sending.message(vk=vk,
                                                      text='Просто нажми на нужную кнопку :)',
@@ -300,31 +301,15 @@ def start():
                             handler.session.close()
                             del handler
 
-                            if response:
+                            text = 'Команда успешно выполнена' if not response \
+                                else f'=== Команда "{command}" не выполнена. ===\n' \
+                                     f'{errors[response]}\n' \
+                                     f'========================================='
 
-                                # Отправить уведомление о некорректном завершении работы команды
-                                sending.message(
-                                    vk=vk,
-                                    chat_id=event.message['from_id'],
-                                    text=f'=== Команда "{command}" не выполнена. ===\n'
-                                         f'{errors[response]}\n'
-                                         f'========================================='
-                                )
-
-                                # Завершение работы в БД
-                                session.commit()
-                                session.close()
-
-                                # Задержка от спама
-                                time.sleep(settings.DELAY)
-
-                                continue
-
-                            # Отправить уведомление об успешном завершении работы команды
                             sending.message(
                                 vk=vk,
-                                chat_id=event.message['from_id'],
-                                text='Команда успешно выполнена.'
+                                chat_id=event.message['chat_id'],
+                                text=text,
                             )
 
                             # Завершение работы в БД
@@ -342,26 +327,44 @@ def start():
                                 text=f'Недостаточно прав.'
                             )
 
+                            # Задержка от спама
+                            time.sleep(settings.DELAY)
+
                 elif event.type == VkBotEventType.MESSAGE_EVENT:
 
-                    pushed_button = event.object['payload'][0]
+                    command = event.object['payload'][0]
 
-                    if pushed_button in functional_buttons:
+                    if command in functional_buttons:
 
-                        required_button = getattr(vkKeyboard, pushed_button)
-                        response = required_button(vk=vk,
-                                                   session=session,
-                                                   event=event,
-                                                   longpoll=longpoll
-                                                   )
+                        response = required_button(
+                            vk=vk,
+                            session=session,
+                            keyboard=command,
+                            event=event,
+                            longpoll=longpoll
+                        )
 
-                    elif pushed_button in keyboard_buttons:
+                        text = 'Команда успешно выполнена' if not response \
+                            else f'Команда "{command}" не выполнена.' \
+                                 f'\nПричина: {errors[response]}' \
 
-                        message_id = required_keyboard(vk=vk,
-                                                       keyboard=pushed_button,
-                                                       event=event,
-                                                       message_id=message_id
-                                                       )
+                        snackbar = vkKeyboard.get_popup_message(text)
+
+                        vk.messages.sendMessageEventAnswer(
+                            event_id=event.object['event_id'],
+                            user_id=event.object['user_id'],
+                            peer_id=event.object['peer_id'],
+                            event_data=snackbar
+                        )
+
+                    elif command in keyboard_buttons:
+
+                        message_id = required_keyboard(
+                            vk=vk,
+                            keyboard=command,
+                            event=event,
+                            message_id=message_id
+                        )
 
                 # Задержка от спама
                 time.sleep(settings.DELAY)

@@ -10,7 +10,6 @@ import update
 import get
 import copyToSpreadsheet
 import delete
-import vkKeyboard
 
 
 class Handler:
@@ -20,14 +19,14 @@ class Handler:
         self.vk = self.vk_session.get_api()
         self.session = get_session(engine)
 
-    def new_title(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
-        return add.title_entry(self.vk, self.session, event, args)
-
     def load(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
         return add.attachment_entry(self.vk, self.session, event, args)
 
-    def send_message(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
-        return vkSend.messages(self.vk, self.session, event, args)
+    def new_title(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
+        return add.title_entry(self.vk, self.session, event, args)
+
+    def add_text_attachments(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
+        return add.text_attachments(self.vk, self.session, event, args)
 
     def update_text(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
         return update.text_entry(self.vk, self.session, event, args)
@@ -35,8 +34,14 @@ class Handler:
     def update_attachment(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
         return update.text_attachment_entry(self.vk, self.session, event, args)
 
-    def add_text_attachments(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
-        return add.text_attachments(self.vk, self.session, event, args)
+    def update_text_step(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
+        return update.text_step_entry(self.vk, self.session, event, args)
+
+    def update_user_step(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
+        return update.user_step_entry(self.vk, self.session, event, args)
+
+    def update_user_admin(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
+        return update.user_admin_entry(self.vk, self.session, event, args)
 
     def delete_text_attachments(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
         return delete.text_attachments(self.vk, self.session, event, args)
@@ -44,20 +49,8 @@ class Handler:
     def clear_text_attachments(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
         return delete.text_attachments_all(self.vk, self.session, event, args)
 
-    def update_text_step(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
-        return update.text_step_entry(self.vk, self.session, event, args)
-
-    def update_user_step(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
-        return update.user_step_entry(self.vk, self.session, event, args)
-
     def get_commands(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
         return get.command_entries(self.vk, self.session, event, args)
-
-    def update_user_admin(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
-        return update.user_admin_entry(self.vk, self.session, event, args)
-
-    def check(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
-        return vkSend.unreceived_messages(self.vk, self.session, event, args)
 
     def get_texts(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
         return get.text_entries(self.vk, self.session, event, args)
@@ -85,3 +78,9 @@ class Handler:
 
     def copy(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
         return copyToSpreadsheet.all_from_db(self.vk, self.session, event, args)
+
+    def send_message(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
+        return vkSend.messages(self.vk, self.session, event, args)
+
+    def check(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
+        return vkSend.unreceived_messages(self.vk, self.session, event, args)
