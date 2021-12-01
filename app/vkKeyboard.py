@@ -192,21 +192,6 @@ def get_add_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
 
     return keyboard
 
-# def get_add_text_keyboard():
-#
-#     keyboard = get_inline_keyboard()
-#
-#     keyboard.add_callback_button(
-#         label='Заголовок, текст, шаг',
-#         color=VkKeyboardColor.NEGATIVE,
-#         payload=['new_text',
-#                  'new_title']
-#     )
-#     keyboard.add_line()
-#     keyboard.add_callback_button(
-#         l
-#     )
-
 
 def get_update_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
 
@@ -235,7 +220,7 @@ def get_update_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
     )
     keyboard.add_line()
     keyboard.add_callback_button(
-        label='Вложения к тексту [TODO]',
+        label='Вложения к тексту',
         color=VkKeyboardColor.PRIMARY,
         payload=['update_text_attachment']
     )
@@ -690,7 +675,7 @@ def update_text(vk: vk_api.vk_api.VkApiMethod,
     return response
 
 
-def update_attachment(vk: vk_api.vk_api.VkApiMethod,
+def update_text_attachment(vk: vk_api.vk_api.VkApiMethod,
                       session: Session,
                       event: Optional[VkBotEvent] = None,
                       longpoll: Optional[vk_api.bot_longpoll.VkBotLongPoll] = None,
@@ -701,7 +686,7 @@ def update_attachment(vk: vk_api.vk_api.VkApiMethod,
         session=session,
         event=event,
         longpoll=longpoll,
-        info='update_attachment'
+        info='update_text_attachment'
     )
 
     if not args:
