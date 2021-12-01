@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from vk_api.longpoll import Event
+from vk_api.bot_longpoll import VkBotEvent
 import vk_api
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -13,7 +13,7 @@ from create_tables import Text
 # args = [{text.title}, {text.attachments}]
 def text_attachments(vk: vk_api.vk_api.VkApiMethod,
                      session: Session,
-                     event: Optional[Event] = None,
+                     event: Optional[VkBotEvent] = None,
                      args: Optional[List[str]] = None) -> int:
     """ The function of deleting an attachment IDs from the Text table in DB.
 
@@ -60,7 +60,7 @@ def text_attachments(vk: vk_api.vk_api.VkApiMethod,
 # args = [{text.title}]
 def text_attachments_all(vk: vk_api.vk_api.VkApiMethod,
                          session: Session,
-                         event: Optional[Event] = None,
+                         event: Optional[VkBotEvent] = None,
                          args: Optional[List[str]] = None) -> int:
     """ The function of deleting all attachment IDs from the Text table in DB.
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
+import json
 
-from vk_api.longpoll import Event
+from vk_api.bot_longpoll import VkBotEvent
 import vk_api
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -13,7 +14,7 @@ from googleParser import make_domain
 # args = [{text.title}, {text.text}]
 def text_entry(vk: vk_api.vk_api.VkApiMethod,
                session: Session,
-               event: Optional[Event] = None,
+               event: Optional[VkBotEvent] = None,
                args: Optional[List[str]] = None) -> int:
     """ The function of updating a text from the Text table in DB.
 
@@ -41,7 +42,7 @@ def text_entry(vk: vk_api.vk_api.VkApiMethod,
 # args = [{text.title}, {text.attachments}]
 def text_attachment_entry(vk: vk_api.vk_api.VkApiMethod,
                           session: Session,
-                          event: Optional[Event] = None,
+                          event: Optional[VkBotEvent] = None,
                           args: Optional[List[str]] = None) -> int:
     """ The function of updating an attachment from the Text table in DB.
 
@@ -60,10 +61,10 @@ def text_attachment_entry(vk: vk_api.vk_api.VkApiMethod,
     text = session.query(Text).filter_by(**params).first()
     if not text:
         return 2
-    attach_params = {'name': args[1]}
-    if not session.query(Attachment).filter_by(**attach_params).first():
-        return 8
-    text.attachments = attach_params['name']
+
+    attach_params = args[1].split(', ')
+
+    text.attachments = json.dumps(attach_params)
 
     session.commit()
     return 0
@@ -72,7 +73,7 @@ def text_attachment_entry(vk: vk_api.vk_api.VkApiMethod,
 # args = [{text.title}, {step.number} | {step.name}]
 def text_step_entry(vk: vk_api.vk_api.VkApiMethod,
                     session: Session,
-                    event: Optional[Event] = None,
+                    event: Optional[VkBotEvent] = None,
                     args: Optional[List[str]] = None) -> int:
     """ The function of updating an step from the Text table in DB.
 
@@ -110,7 +111,7 @@ def text_step_entry(vk: vk_api.vk_api.VkApiMethod,
 # args = [{user.domain}, {step.number} | {step.name}]
 def user_step_entry(vk: vk_api.vk_api.VkApiMethod,
                     session: Session,
-                    event: Optional[Event] = None,
+                    event: Optional[VkBotEvent] = None,
                     args: Optional[List[str]] = None) -> int:
     """ The function of updating an step from the User table in DB.
 
@@ -148,7 +149,7 @@ def user_step_entry(vk: vk_api.vk_api.VkApiMethod,
 # args = [{user.domain}, {user.admin]
 def user_admin_entry(vk: vk_api.vk_api.VkApiMethod,
                      session: Session,
-                     event: Optional[Event] = None,
+                     event: Optional[VkBotEvent] = None,
                      args: Optional[List[str]] = None) -> int:
     """ The function of updating an admin from the User table in DB.
 

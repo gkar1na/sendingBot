@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from vk_api.longpoll import Event
+from vk_api.bot_longpoll import VkBotEvent
 import vk_api
 from typing import List, Optional
 import json
@@ -15,7 +15,7 @@ import sending as send
 # args = [quantity]
 def command_entries(vk: vk_api.vk_api.VkApiMethod,
                     session: Session,
-                    event: Optional[Event] = None,
+                    event: Optional[VkBotEvent] = None,
                     args: Optional[List[str]] = None) -> int:
     """ The function of getting commands from the Command table in DB.
 
@@ -26,7 +26,12 @@ def command_entries(vk: vk_api.vk_api.VkApiMethod,
 
     :return: error number or 0
     """
-    if session.query(User).filter_by(chat_id=event.user_id).first().admin:
+    if event.message:
+        chat_id = event.message['from_id']
+    else:
+        chat_id = event.object['user_id']
+
+    if session.query(User).filter_by(chat_id=chat_id).first().admin:
         params = {}
     else:
         params = {'admin': False}
@@ -63,7 +68,7 @@ def command_entries(vk: vk_api.vk_api.VkApiMethod,
     for message_text in message_texts:
         send.message(
             vk=vk,
-            chat_id=event.user_id,
+            chat_id=chat_id,
             text=message_text
         )
 
@@ -74,7 +79,7 @@ def command_entries(vk: vk_api.vk_api.VkApiMethod,
 # args = [quantity]
 def text_entries(vk: vk_api.vk_api.VkApiMethod,
                  session: Session,
-                 event: Optional[Event] = None,
+                 event: Optional[VkBotEvent] = None,
                  args: Optional[List[str]] = None) -> int:
     """ The function of getting texts from the Text table in DB.
 
@@ -118,10 +123,16 @@ def text_entries(vk: vk_api.vk_api.VkApiMethod,
             message_text += f'{i + 1}) "{text["title"]}" ({step})\n'
 
     message_texts.append(message_text)
+
+    if event.message:
+        chat_id = event.message['from_id']
+    else:
+        chat_id = event.object['user_id']
+
     for message_text in message_texts:
         send.message(
             vk=vk,
-            chat_id=event.user_id,
+            chat_id=chat_id,
             text=message_text
         )
 
@@ -132,7 +143,7 @@ def text_entries(vk: vk_api.vk_api.VkApiMethod,
 # args = [quantity]
 def step_entries(vk: vk_api.vk_api.VkApiMethod,
                  session: Session,
-                 event: Optional[Event] = None,
+                 event: Optional[VkBotEvent] = None,
                  args: Optional[List[str]] = None) -> int:
     """ The function of getting steps from the Step table in DB.
 
@@ -171,10 +182,16 @@ def step_entries(vk: vk_api.vk_api.VkApiMethod,
             message_text += f'{step["number"]}) {step["name"]}\n'
 
     message_texts.append(message_text)
+
+    if event.message:
+        chat_id = event.message['from_id']
+    else:
+        chat_id = event.object['user_id']
+
     for message_text in message_texts:
         send.message(
             vk=vk,
-            chat_id=event.user_id,
+            chat_id=chat_id,
             text=message_text)
 
     session.commit()
@@ -184,7 +201,7 @@ def step_entries(vk: vk_api.vk_api.VkApiMethod,
 # args = [quantity]
 def user_entries(vk: vk_api.vk_api.VkApiMethod,
                  session: Session,
-                 event: Optional[Event] = None,
+                 event: Optional[VkBotEvent] = None,
                  args: Optional[List[str]] = None) -> int:
     """ The function of getting users from the User table in DB.
 
@@ -202,7 +219,12 @@ def user_entries(vk: vk_api.vk_api.VkApiMethod,
             return 9
         params['quantity'] = int(args[0])
 
-    users = session.query(User).filter(User.chat_id != event.user_id)
+    if event.message:
+        chat_id = event.message['from_id']
+    else:
+        chat_id = event.object['user_id']
+
+    users = session.query(User).filter(User.chat_id != chat_id)
     if params and 'quantity' in params.keys() and params['quantity'] < users.count():
         users = users.order_by(desc(User.date)).limit(params['quantity'])
 
@@ -233,7 +255,7 @@ def user_entries(vk: vk_api.vk_api.VkApiMethod,
     for message_text in message_texts:
         send.message(
             vk=vk,
-            chat_id=event.user_id,
+            chat_id=chat_id,
             text=message_text
         )
 
