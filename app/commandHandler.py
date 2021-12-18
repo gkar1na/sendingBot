@@ -25,6 +25,9 @@ class Handler:
     def new_title(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
         return add.title_entry(self.vk, self.session, event, args)
 
+    def new_joke(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
+        return add.joke_entry(self.vk, self.session, event, args)
+
     def add_text_attachments(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
         return add.text_attachments(self.vk, self.session, event, args)
 
@@ -84,3 +87,12 @@ class Handler:
 
     def check(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
         return vkSend.unreceived_messages(self.vk, self.session, event, args)
+
+    def get_meme(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
+        return get.memes(self.vk, self.session, event, args)
+
+    def get_joke(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
+        return get.jokes(self.vk, self.session, event, args)
+
+    def trolling(self, event: Optional[VkBotEvent] = None, args: Optional[List[str]] = None) -> int:
+        return get.trolling(self.vk, self.session, event, args)

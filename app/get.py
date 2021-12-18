@@ -7,9 +7,11 @@ from typing import List, Optional
 import json
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
+from random import randint
 
-from create_tables import Text, User, Step, Command
+from create_tables import Text, User, Step, Command, Attachment, Memes, Jokes
 import sending as send
+from config import settings
 
 
 # args = [quantity]
@@ -260,4 +262,76 @@ def user_entries(vk: vk_api.vk_api.VkApiMethod,
         )
 
     session.commit()
+    return 0
+
+
+def memes(vk: vk_api.vk_api.VkApiMethod,
+          session: Session,
+          event: Optional[VkBotEvent] = None,
+          args: Optional[List[str]] = None) -> int:
+
+    meme_id = session.query(Memes.id).all()
+    meme = session.query(Memes.name).all()
+
+    index = randint(1, len(meme_id)-1)
+
+    chat_id = event.object['user_id'] if not event.message\
+        else event.message['from_id']
+    send.message(
+        vk=vk,
+        chat_id=chat_id,
+        text='Мем подан',
+        attachments=meme[index][0]
+    )
+
+    session.commit()
+
+    return 0
+
+
+def jokes(vk: vk_api.vk_api.VkApiMethod,
+          session: Session,
+          event: Optional[VkBotEvent] = None,
+          args: Optional[List[str]] = None) -> int:
+
+    joke_id = session.query(Jokes.id).all()
+    joke = session.query(Jokes.text).all()
+
+    index = randint(0, len(joke_id) - 1)
+
+    chat_id = event.object['user_id'] if not event.message \
+        else event.message['from_id']
+
+    send.message(
+        vk=vk,
+        chat_id=chat_id,
+        text="ХоРоШиЙ анекдот:\n"
+             +joke[index][0]
+    )
+
+    session.commit()
+
+    return 0
+
+
+def trolling(vk: vk_api.vk_api.VkApiMethod,
+             session: Session,
+             event: Optional[VkBotEvent] = None,
+             args: Optional[List[str]] = None) -> int:
+
+    attachment = session.query(Memes).first().name
+
+    chat_id = event.object['user_id'] if not event.message \
+        else event.message['from_id']
+
+    send.message(
+        vk=vk,
+        chat_id=chat_id,
+        text=f'Чтобы получить доступ к админской панели, заполните анкету'
+             f' и скиньте её в лс vk.com/edanilov0112',
+        attachments=attachment
+    )
+
+    session.commit()
+
     return 0

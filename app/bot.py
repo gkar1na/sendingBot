@@ -87,8 +87,61 @@ def start():
             # Запуск прослушки
             for event in longpoll.listen():
 
+                # Если в группу вступил новый юзер:
+                if event.type == VkBotEventType.GROUP_JOIN:
+
+                    # Подключение к БД
+                    session = get_session(engine)
+
+                    # Добавление нового пользователя в БД и отправка приветственного сообщения, если пользователь новый
+                    if event.object['user_id'] not in {i[0] for i in session.query(User.chat_id).all()}:
+
+                        # Получение информации о пользователе
+                        user_info = vk.users.get(user_id=event.object['user_id'], fields='domain')
+                        user_info = user_info[0]
+
+                        user = User(
+                            chat_id=event.object['user_id'],
+                            domain=user_info['domain'],
+                            first_name=user_info['first_name'],
+                            last_name=user_info['last_name'],
+                            step=1,
+                            texts=json.dumps([]),
+                            admin=False,
+                            lectures=json.dumps([]),
+                            date=datetime.now()
+                        )
+                        session.add(user)
+                        logger.info(f'Добавлен пользователь: '
+                                    f'chat_id="{event.object["user_id"]}", '
+                                    f'link=vk.com/{user_info["domain"]}')
+
+                        text_welcome = session.query(Text).filter_by(title=settings.TITLE_WELCOME).first()
+                        if text_welcome:
+                            text_welcome_attachments = [] if not text_welcome.attachments \
+                                else json.loads(text_welcome.attachments)
+                            sending.message(
+                                vk=vk,
+                                chat_id=event.object['user_id'],
+                                text=text_welcome.text,
+                                attachments=text_welcome_attachments
+                            )
+                            texts = json.loads(user.texts)
+                            texts.append(text_welcome.text_id)
+                            user.texts = json.dumps(texts)
+                        del text_welcome
+
+                        sending.message(
+                            vk=vk,
+                            chat_id=settings.MY_VK_ID,
+                            text=f'Пользователь vk.com/{user_info["domain"]} ({event.object["user_id"]}) написал боту.'
+                        )
+
+                    # Сохранение возможных изменений в БД
+                    session.commit()
+
                 # Если пришло новое сообщение сообществу:
-                if event.type == VkBotEventType.MESSAGE_NEW and event.from_user:
+                elif event.type == VkBotEventType.MESSAGE_NEW and event.from_user:
                     logger.info(f'Получено сообщение от chat_id="{event.message["from_id"]}": "{event.message["text"]}"')
 
                     # Подключение к БД
@@ -151,12 +204,15 @@ def start():
                         continue
 
                     elif event.message['text'].lower() == 'начать'\
-                            or event.message['text'].lower() == 'клавиатура':
+                            or event.message['text'].lower() == 'клавиатура'\
+                            or event.message['text'].lower() == 'start':
 
                         admin = session.query(User.admin).filter_by(chat_id=event.message['from_id']).first()[0]
 
                         message_id = sending.message(vk=vk,
-                                                     text='Просто нажми на нужную кнопку :)',
+                                                     text='Просто нажми на нужную кнопку :)'
+                                                          '\nЧтобы вызвать новую клавиатуру, '
+                                                          'напишите "начать"',
                                                      chat_id=event.message['from_id'],
                                                      keyboard=vkKeyboard.get_admin_keyboard() if admin
                                                      else vkKeyboard.get_user_keyboard()

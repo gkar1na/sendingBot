@@ -8,7 +8,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 import json
 
-from create_tables import Text, Attachment
+from create_tables import Text, Attachment, Memes, Jokes
 import sending as send
 
 
@@ -34,6 +34,32 @@ def title_entry(vk: vk_api.vk_api.VkApiMethod,
         return 3
 
     session.add(Text(title=params['title'], date=datetime.now()))
+
+    session.commit()
+    return 0
+
+# args = [joke.text]
+def joke_entry(vk: vk_api.vk_api.VkApiMethod,
+               session: Session,
+               event: Optional[VkBotEvent] = None,
+               args: Optional[List[str]] = None) -> int:
+    """ The function of adding a text title to the Text table in DB.
+
+    :param vk: session for connecting to VK API
+    :param session: session to connect to the database
+    :param event: event object in VK
+    :param args: arguments of the command entered
+
+    :return: error number or 0
+    """
+    if not args or not args[0]:
+        return 1
+
+    params = {'text': args[0]}
+    if params['text'] in {joke.text for joke in session.query(Jokes)}:
+        return 3
+
+    session.add(Jokes(text=params['text']))
 
     session.commit()
     return 0
@@ -73,7 +99,9 @@ def attachment_entry(vk: vk_api.vk_api.VkApiMethod,
             attach_id = attachment[attach_type]['id']
             params = {'name': f'{attach_type}{attach_owner_id}_{attach_id}'}
 
-        if session.query(Attachment).filter_by(**params).first():
+        table = Attachment if args[0] != 'meme' else Memes
+
+        if session.query(table).filter_by(**params).first():
             send.message(
                 vk=vk,
                 chat_id=event.message['from_id'],
@@ -82,7 +110,7 @@ def attachment_entry(vk: vk_api.vk_api.VkApiMethod,
             )
             continue
 
-        session.add(Attachment(**params))
+        session.add(table(**params))
         send.message(
             vk=vk,
             chat_id=event.message['from_id'],

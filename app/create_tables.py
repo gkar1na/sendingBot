@@ -65,6 +65,22 @@ class Command(db):
     admin = Column(Boolean)
 
 
+# Таблица с мемами
+class Memes(db):
+    __tablename__ = 'memes'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, primary_key=True)
+
+
+# Таблица с анеками
+class Jokes(db):
+    __tablename__ = 'jokes'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    text = Column(String, primary_key=True)
+
+
 # Создание таблиц
 def create_tables(engine: Engine) -> None:
     db.metadata.create_all(engine)

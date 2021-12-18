@@ -32,15 +32,32 @@ def get_user_keyboard() -> vk_api.keyboard.VkKeyboard:
     keyboard = get_inline_keyboard()
 
     keyboard.add_callback_button(
+        label='Мем',
+        color=VkKeyboardColor.POSITIVE,
+        payload=['get_meme']
+    )
+    keyboard.add_callback_button(
+        label='Анекдот',
+        color=VkKeyboardColor.POSITIVE,
+        payload=['get_joke']
+    )
+    keyboard.add_line()
+    keyboard.add_callback_button(
         label='Информация',
         color=VkKeyboardColor.PRIMARY,
         payload=['info']
     )
+    # keyboard.add_line()
+    # keyboard.add_callback_button(
+    #     label='Сообщить о проблеме',
+    #     color=VkKeyboardColor.PRIMARY,
+    #     payload=['problem']
+    # )
     keyboard.add_line()
     keyboard.add_callback_button(
-        label='Сообщить о проблеме',
-        color=VkKeyboardColor.PRIMARY,
-        payload=['problem']
+        label='Админ панель',
+        color=VkKeyboardColor.NEGATIVE,
+        payload=['trolling']
     )
 
     return keyboard
@@ -63,11 +80,22 @@ def get_admin_keyboard() -> vk_api.keyboard.VkKeyboard:
         color=VkKeyboardColor.PRIMARY,
         payload=['info']
     )
+    # keyboard.add_line()
+    # keyboard.add_callback_button(
+    #     label='Сообщить о проблеме',
+    #     color=VkKeyboardColor.PRIMARY,
+    #     payload=['problem']
+    # )
     keyboard.add_line()
     keyboard.add_callback_button(
-        label='Сообщить о проблеме',
-        color=VkKeyboardColor.PRIMARY,
-        payload=['problem']
+        label='Мем',
+        color=VkKeyboardColor.POSITIVE,
+        payload=['get_meme']
+    )
+    keyboard.add_callback_button(
+        label='Анекдот',
+        color=VkKeyboardColor.POSITIVE,
+        payload=['get_joke']
     )
     keyboard.add_line()
     keyboard.add_callback_button(
@@ -181,6 +209,17 @@ def get_add_bd_keyboard() -> vk_api.keyboard.VkKeyboard:
         label='Вложения к тексту',
         color=VkKeyboardColor.PRIMARY,
         payload=['add_text_attachments']
+    )
+    keyboard.add_line()
+    keyboard.add_callback_button(
+        label='Мем',
+        color=VkKeyboardColor.PRIMARY,
+        payload=['load_meme']
+    )
+    keyboard.add_callback_button(
+        label='Анекдот',
+        color=VkKeyboardColor.PRIMARY,
+        payload=['load_joke']
     )
     keyboard.add_line()
     keyboard.add_callback_button(
@@ -500,7 +539,7 @@ def argument_handler(vk: vk_api.vk_api.VkApiMethod,
                     sending.message(
                         vk=vk,
                         chat_id=chat_id,
-                        text='Повтори ввод'
+                        text='Повторите ввод'
                     )
 
             else:
@@ -544,28 +583,36 @@ def problem(vk: vk_api.vk_api.VkApiMethod,
 
         if keyboard_event.type == VkBotEventType.MESSAGE_NEW and keyboard_event.from_user:
 
-            if keyboard_event.message['text'] != 'Отмена':
+            if keyboard_event.message['from_id'] == chat_id:
 
-                domain = session.query(User.domain).filter_by(chat_id=chat_id).first()
+                if keyboard_event.message['text'] != 'Отмена':
 
-                sending.message(
-                    vk=vk,
-                    text=f'Получено сообщение об ошибке от пользователя vk.com/{domain[0]} '
-                         f'({chat_id})'
-                         f'\nОписание проблемы: ' + keyboard_event.message['text'],
-                    chat_id=settings.MY_VK_ID
-                )
+                    domain = session.query(User.domain).filter_by(chat_id=chat_id).first()
 
-                sending.message(
-                    vk=vk,
-                    text='Уведомление об ошибке отправлено'
-                         '\nС вами обязательно свяжутся',
-                    chat_id=chat_id
-                )
+                    sending.message(
+                        vk=vk,
+                        text=f'Получено сообщение об ошибке от пользователя vk.com/{domain[0]} '
+                             f'({chat_id})'
+                             f'\nОписание проблемы: ' + keyboard_event.message['text'],
+                        chat_id=settings.MY_VK_ID
+                    )
 
-            else:
+                    sending.message(
+                        vk=vk,
+                        text='Уведомление об ошибке отправлено'
+                             '\nС вами обязательно свяжутся',
+                        chat_id=chat_id
+                    )
 
-                return -2
+                else:
+
+                    vk.messages.markAsAnsweredConversation(
+                        peer_id=event.object['peer_id'],
+                        answered=1,
+                        group_id=settings.GROUP_ID
+                    )
+
+                    return -2
 
     return 0
 
@@ -592,7 +639,46 @@ def load(vk: vk_api.vk_api.VkApiMethod,
 
             if new_event.message['attachments']:
 
-                response = handler.load(event=new_event)
+                response = handler.load(event=new_event, args='attachment')
+
+                return response
+
+            elif new_event.message['text'] == 'Отмена':
+
+                return -2
+
+            else:
+
+                sending.message(
+                    vk=vk,
+                    chat_id=new_event.message['from_id'],
+                    text='Повторите ввод'
+                )
+
+
+def load_meme(vk: vk_api.vk_api.VkApiMethod,
+              session: Session,
+              event: Optional[VkBotEvent] = None,
+              longpoll: Optional[vk_api.bot_longpoll.VkBotLongPoll] = None,
+              handler=None) -> int:
+
+    text = 'Прикрепите мемы\n' \
+           'Для отмены команды напишите "Отмена"'
+    sending.message(
+        vk=vk,
+        chat_id=event.object['user_id'],
+        text=text
+    )
+
+    handler = commandHandler.Handler()
+
+    for new_event in longpoll.listen():
+
+        if new_event.type == VkBotEventType.MESSAGE_NEW:
+
+            if new_event.message['attachments']:
+
+                response = handler.load(event=new_event, args=['meme'])
 
                 return response
 
@@ -627,6 +713,27 @@ def new_title(vk: vk_api.vk_api.VkApiMethod,
         response = -2
     else:
         response = handler.new_title(event=event, args=args)
+
+    return response
+
+def load_joke(vk: vk_api.vk_api.VkApiMethod,
+              session: Session,
+              event: Optional[VkBotEvent] = None,
+              longpoll: Optional[vk_api.bot_longpoll.VkBotLongPoll] = None,
+              handler=None) -> int:
+
+    args = argument_handler(
+        vk=vk,
+        session=session,
+        event=event,
+        longpoll=longpoll,
+        info='new_joke'
+    )
+
+    if not args:
+        response = -2
+    else:
+        response = handler.new_joke(event=event, args=args)
 
     return response
 
@@ -1057,3 +1164,35 @@ def check(vk: vk_api.vk_api.VkApiMethod,
     response = handler.check(event=event)
 
     return response
+
+def get_meme(vk: vk_api.vk_api.VkApiMethod,
+             session: Session,
+             event: Optional[VkBotEvent] = None,
+             longpoll: Optional[vk_api.bot_longpoll.VkBotLongPoll] = None,
+             handler=None) -> int:
+
+    handler.get_meme(event)
+
+    return 0
+
+
+def get_joke(vk: vk_api.vk_api.VkApiMethod,
+             session: Session,
+             event: Optional[VkBotEvent] = None,
+             longpoll: Optional[vk_api.bot_longpoll.VkBotLongPoll] = None,
+             handler=None) -> int:
+
+    handler.get_joke(event)
+
+    return 0
+
+
+def trolling(vk: vk_api.vk_api.VkApiMethod,
+             session: Session,
+             event: Optional[VkBotEvent] = None,
+             longpoll: Optional[vk_api.bot_longpoll.VkBotLongPoll] = None,
+             handler=None) -> int:
+
+    handler.trolling(event)
+
+    return 0
